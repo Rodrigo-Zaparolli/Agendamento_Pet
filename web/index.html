@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+  <!-- Firebase App (necessário) -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+  <!-- Adicione os serviços Firebase que você usa -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- Adicione outros serviços conforme necessário -->
+
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
@@ -31,6 +28,22 @@
 
   <title>agendamento_pet</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Configurações do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC04nnQ8YsS8821mTeJhodFAWboDKV8t-8",
+      authDomain: "agendamento-b8f6e.firebaseapp.com",
+      projectId: "agendamento-b8f6e",
+      storageBucket: "agendamento-b8f6e.appspot.com",
+      messagingSenderId: "268548462362",
+      appId: "1:268548462362:web:bd0b38fbe17470d32a7ea3"
+    };
+
+    // Inicialize o Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

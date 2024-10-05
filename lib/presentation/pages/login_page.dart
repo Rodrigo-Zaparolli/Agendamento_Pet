@@ -95,7 +95,7 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                           obscureText: false,
                           enableSuggestions: true,
                           keyboardType: TextInputType.emailAddress,
-                          inputFormatters: [],
+                          inputFormatters: const [],
                           suffix: null,
                           textfieldBorder: 0.50,
                         ),
@@ -122,7 +122,7 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                             obscureText: controller.obscureText,
                             enableSuggestions: false,
                             keyboardType: TextInputType.text,
-                            inputFormatters: [],
+                            inputFormatters: const [],
                             suffix: SizedBox(
                               height: 20.0,
                               width: 40.0,
@@ -168,7 +168,7 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                                 ),
                                 onPressed: () => controller.isButtonDisabled
                                     ? null
-                                    : controller.login(),
+                                    : controller.login(context),
                                 color: MColors.blue)),
                     const SizedBox(height: 20.0),
                     GestureDetector(

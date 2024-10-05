@@ -73,6 +73,7 @@ class _ResetPasswordPageState
                       obscureText: false,
                       enableSuggestions: true,
                       keyboardType: TextInputType.emailAddress,
+                      // ignore: prefer_const_literals_to_create_immutables
                       inputFormatters: [],
                       suffix: null,
                       textfieldBorder: 0.50,
@@ -98,7 +99,7 @@ class _ResetPasswordPageState
                             ),
                             onPressed: () => controller.isButtonDisabled
                                 ? null
-                                : controller.redefinir(),
+                                : controller.redefinir(context),
                             color: MColors.blue,
                           ),
                   ],

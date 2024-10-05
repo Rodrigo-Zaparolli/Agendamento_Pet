@@ -153,28 +153,108 @@ mixin _$LoginController on _LoginControllerBase, Store {
     });
   }
 
+  late final _$_loadingAtom =
+      Atom(name: '_LoginControllerBase._loading', context: context);
+
+  @override
+  bool get _loading {
+    _$_loadingAtom.reportRead();
+    return super._loading;
+  }
+
+  @override
+  set _loading(bool value) {
+    _$_loadingAtom.reportWrite(value, super._loading, () {
+      super._loading = value;
+    });
+  }
+
+  late final _$_firstLoginAtom =
+      Atom(name: '_LoginControllerBase._firstLogin', context: context);
+
+  @override
+  bool get _firstLogin {
+    _$_firstLoginAtom.reportRead();
+    return super._firstLogin;
+  }
+
+  @override
+  set _firstLogin(bool value) {
+    _$_firstLoginAtom.reportWrite(value, super._firstLogin, () {
+      super._firstLogin = value;
+    });
+  }
+
+  late final _$userPhotoURLAtom =
+      Atom(name: '_LoginControllerBase.userPhotoURL', context: context);
+
+  @override
+  String? get userPhotoURL {
+    _$userPhotoURLAtom.reportRead();
+    return super.userPhotoURL;
+  }
+
+  @override
+  set userPhotoURL(String? value) {
+    _$userPhotoURLAtom.reportWrite(value, super.userPhotoURL, () {
+      super.userPhotoURL = value;
+    });
+  }
+
   late final _$loginAsyncAction =
       AsyncAction('_LoginControllerBase.login', context: context);
 
   @override
-  Future login() {
-    return _$loginAsyncAction.run(() => super.login());
+  Future<void> login(BuildContext context) {
+    return _$loginAsyncAction.run(() => super.login(context));
+  }
+
+  late final _$_signInAsyncAction =
+      AsyncAction('_LoginControllerBase._signIn', context: context);
+
+  @override
+  Future<void> _signIn(BuildContext context) {
+    return _$_signInAsyncAction.run(() => super._signIn(context));
+  }
+
+  late final _$_signUpAsyncAction =
+      AsyncAction('_LoginControllerBase._signUp', context: context);
+
+  @override
+  Future<void> _signUp(BuildContext context) {
+    return _$_signUpAsyncAction.run(() => super._signUp(context));
+  }
+
+  late final _$saveCamposAsyncAction =
+      AsyncAction('_LoginControllerBase.saveCampos', context: context);
+
+  @override
+  Future<void> saveCampos() {
+    return _$saveCamposAsyncAction.run(() => super.saveCampos());
   }
 
   late final _$cadastrarAsyncAction =
       AsyncAction('_LoginControllerBase.cadastrar', context: context);
 
   @override
-  Future cadastrar() {
-    return _$cadastrarAsyncAction.run(() => super.cadastrar());
+  Future<void> cadastrar(BuildContext context) {
+    return _$cadastrarAsyncAction.run(() => super.cadastrar(context));
   }
 
   late final _$redefinirAsyncAction =
       AsyncAction('_LoginControllerBase.redefinir', context: context);
 
   @override
-  Future redefinir() {
-    return _$redefinirAsyncAction.run(() => super.redefinir());
+  Future<void> redefinir(BuildContext context) {
+    return _$redefinirAsyncAction.run(() => super.redefinir(context));
+  }
+
+  late final _$logoutAsyncAction =
+      AsyncAction('_LoginControllerBase.logout', context: context);
+
+  @override
+  Future<void> logout(BuildContext context) {
+    return _$logoutAsyncAction.run(() => super.logout(context));
   }
 
   late final _$_LoginControllerBaseActionController =
@@ -214,6 +294,17 @@ mixin _$LoginController on _LoginControllerBase, Store {
   }
 
   @override
+  String? validatePhoneNumber(String? val) {
+    final _$actionInfo = _$_LoginControllerBaseActionController.startAction(
+        name: '_LoginControllerBase.validatePhoneNumber');
+    try {
+      return super.validatePhoneNumber(val);
+    } finally {
+      _$_LoginControllerBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void togglePasswordVisibility() {
     final _$actionInfo = _$_LoginControllerBaseActionController.startAction(
         name: '_LoginControllerBase.togglePasswordVisibility');
@@ -235,7 +326,8 @@ error: ${error},
 autoValidate: ${autoValidate},
 isButtonDisabled: ${isButtonDisabled},
 obscureText: ${obscureText},
-isEnabled: ${isEnabled}
+isEnabled: ${isEnabled},
+userPhotoURL: ${userPhotoURL}
     ''';
   }
 }

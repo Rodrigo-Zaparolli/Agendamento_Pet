@@ -4,10 +4,5 @@ import 'di.config.dart';
 
 final GetIt getIt = GetIt.instance;
 
-// @InjectableInit()
-// Future<void> configureInjection() async {
-//   await $initGetIt(getIt);
-// }
-
 @InjectableInit(preferRelativeImports: false)
 void configureInjection() => getIt.init();

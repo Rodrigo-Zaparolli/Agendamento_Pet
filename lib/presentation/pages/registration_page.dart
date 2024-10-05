@@ -93,7 +93,7 @@ class _RegistrationPageState
                           obscureText: false,
                           enableSuggestions: true,
                           keyboardType: TextInputType.text,
-                          inputFormatters: [],
+                          inputFormatters: const [],
                           suffix: null,
                           textfieldBorder: 0.50,
                         ),
@@ -119,7 +119,7 @@ class _RegistrationPageState
                           obscureText: false,
                           enableSuggestions: true,
                           keyboardType: TextInputType.emailAddress,
-                          inputFormatters: [],
+                          inputFormatters: const [],
                           suffix: null,
                           textfieldBorder: 0.50,
                         ),
@@ -146,7 +146,7 @@ class _RegistrationPageState
                             obscureText: controller.obscureText,
                             enableSuggestions: false,
                             keyboardType: TextInputType.text,
-                            inputFormatters: [],
+                            inputFormatters: const [],
                             suffix: SizedBox(
                               height: 20.0,
                               width: 40.0,
@@ -213,7 +213,7 @@ class _RegistrationPageState
                                 ),
                                 onPressed: () => controller.isButtonDisabled
                                     ? null
-                                    : controller.cadastrar(),
+                                    : controller.cadastrar(context),
                                 color: MColors.blue,
                               ),
                         const SizedBox(height: 20.0),

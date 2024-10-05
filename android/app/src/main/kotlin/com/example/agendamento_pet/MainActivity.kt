@@ -1,4 +1,4 @@
-package com.example.agendamento_pet
+package com.agendamento.pet
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   final PageStorageBucket bucket = PageStorageBucket();
 
   final List<Widget> _children = [
+    // ignore: prefer_const_constructors
     DashboardScreen(),
     const AgendamentosScreen(),
     ClientesScreen(),
