@@ -1,5 +1,5 @@
-// ignore_for_file: avoid_print
-
+import 'package:agendamento_pet/domain/model/clientes.dart';
+import 'package:agendamento_pet/domain/model/pet.dart';
 import 'package:agendamento_pet/domain/model/usuario.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +10,12 @@ abstract class FirestoreRepository {
   Future<void> changePassword(String newPassword);
   Future<Usuario?> getUserDetails(String userId);
   Future<void> updateUserDetails(Usuario usuario);
+  Future<List<Clientes>> fetchClients();
+  Future<void> addClients(Clientes client);
+
+  Future<void> addPet(Pet pet);
+  Future<List<Pet>> fetchPets();
+  Future<void> deletePet(String petId);
 }
 
 @Injectable(as: FirestoreRepository)
@@ -70,6 +76,54 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
         await currentUser.updateProfile(
             displayName: usuario.name, photoURL: usuario.photoURL);
       }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Clientes>> fetchClients() async {
+    try {
+      QuerySnapshot snapshot = await firestore.collection('clientes').get();
+      return snapshot.docs.map((doc) => Clientes.fromDocument(doc)).toList();
+    } catch (e) {
+      print("Erro ao buscar clientes: $e");
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> addClients(Clientes client) async {
+    try {
+      await firestore.collection('clientes').add(client.toJson());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> addPet(Pet pet) async {
+    try {
+      await firestore.collection('pets').doc(pet.id).set(pet.toJson());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Pet>> fetchPets() async {
+    try {
+      QuerySnapshot snapshot = await firestore.collection('pets').get();
+      return snapshot.docs.map((doc) => Pet.fromDocument(doc)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deletePet(String petId) async {
+    try {
+      await firestore.collection('pets').doc(petId).delete();
     } catch (e) {
       rethrow;
     }

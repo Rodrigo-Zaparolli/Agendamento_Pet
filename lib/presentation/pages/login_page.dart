@@ -166,9 +166,7 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                                     16.0,
                                   ),
                                 ),
-                                onPressed: () => controller.isButtonDisabled
-                                    ? null
-                                    : controller.login(context),
+                                onPressed: () => controller.signIn(context),
                                 color: MColors.blue)),
                     const SizedBox(height: 20.0),
                     GestureDetector(

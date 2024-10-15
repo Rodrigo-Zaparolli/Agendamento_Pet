@@ -201,28 +201,20 @@ mixin _$LoginController on _LoginControllerBase, Store {
     });
   }
 
-  late final _$loginAsyncAction =
-      AsyncAction('_LoginControllerBase.login', context: context);
+  late final _$signInAsyncAction =
+      AsyncAction('_LoginControllerBase.signIn', context: context);
 
   @override
-  Future<void> login(BuildContext context) {
-    return _$loginAsyncAction.run(() => super.login(context));
+  Future<void> signIn(BuildContext context) {
+    return _$signInAsyncAction.run(() => super.signIn(context));
   }
 
-  late final _$_signInAsyncAction =
-      AsyncAction('_LoginControllerBase._signIn', context: context);
+  late final _$signUpAsyncAction =
+      AsyncAction('_LoginControllerBase.signUp', context: context);
 
   @override
-  Future<void> _signIn(BuildContext context) {
-    return _$_signInAsyncAction.run(() => super._signIn(context));
-  }
-
-  late final _$_signUpAsyncAction =
-      AsyncAction('_LoginControllerBase._signUp', context: context);
-
-  @override
-  Future<void> _signUp(BuildContext context) {
-    return _$_signUpAsyncAction.run(() => super._signUp(context));
+  Future<void> signUp(BuildContext context) {
+    return _$signUpAsyncAction.run(() => super.signUp(context));
   }
 
   late final _$saveCamposAsyncAction =
@@ -231,14 +223,6 @@ mixin _$LoginController on _LoginControllerBase, Store {
   @override
   Future<void> saveCampos() {
     return _$saveCamposAsyncAction.run(() => super.saveCampos());
-  }
-
-  late final _$cadastrarAsyncAction =
-      AsyncAction('_LoginControllerBase.cadastrar', context: context);
-
-  @override
-  Future<void> cadastrar(BuildContext context) {
-    return _$cadastrarAsyncAction.run(() => super.cadastrar(context));
   }
 
   late final _$redefinirAsyncAction =

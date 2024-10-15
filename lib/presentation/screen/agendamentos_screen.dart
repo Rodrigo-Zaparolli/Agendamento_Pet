@@ -1,11 +1,28 @@
+import 'package:agendamento_pet/controller/dashboard_controller.dart';
 import 'package:agendamento_pet/core/utils/all_widgets.dart';
 import 'package:agendamento_pet/core/utils/colors.dart';
+import 'package:agendamento_pet/core/utils/widget_stateful.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 
-class AgendamentosScreen extends StatelessWidget {
+class AgendamentosScreen extends StatefulWidget {
   const AgendamentosScreen({super.key});
+
+  @override
+  State<AgendamentosScreen> createState() => _AgendamentosScreenState();
+}
+
+class _AgendamentosScreenState
+    extends WidgetStateful<AgendamentosScreen, DashboardController> {
+  final TextEditingController petNomeController = TextEditingController();
+  final TextEditingController racaController = TextEditingController();
+  final TextEditingController idadeController = TextEditingController();
+  final TextEditingController pesoController = TextEditingController();
+  String? selectedSexo;
+  DateTime? selectedDate;
+  bool isClienteExistente = false;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +39,6 @@ class AgendamentosScreen extends StatelessWidget {
     );
   }
 
-  // Seção da lista de agendamentos com campo de busca
   Widget _buildAgendamentoListSection() {
     return Expanded(
       flex: 1,
@@ -60,13 +76,32 @@ class AgendamentosScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      'Nenhum agendamento encontrado.',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
+                Observer(
+                  builder: (_) {
+                    if (controller.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (controller.clients.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'Nenhum agendamento encontrado.',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }
+
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: controller.clients.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(controller.clients[index].nome),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -102,22 +137,27 @@ class AgendamentosScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                buildTextField('Tutor:', 'Nome do tutor'),
-                buildTextField('Pet:', 'Nome do pet'),
-                buildTextField('Raça:', 'Raça'),
-                buildTextField('Idade:', 'Idade do pet'),
-                buildTextField('Peso:', 'Peso do pet'),
+                _buildClienteDropdown(),
+                buildTextField('Pet:', 'Nome do pet', petNomeController),
+                buildTextField('Raça:', 'Raça', racaController),
+                buildTextField('Idade:', 'Idade do pet', idadeController),
+                buildTextField('Peso:', 'Peso do pet', pesoController),
                 const SizedBox(height: 16),
                 const Text('Sexo:',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 DropdownButtonFormField<String>(
+                  value: selectedSexo,
                   items: ['Escolha', 'Macho', 'Fêmea']
                       .map((label) => DropdownMenuItem(
                             value: label,
                             child: Text(label),
                           ))
                       .toList(),
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSexo = value;
+                    });
+                  },
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     isDense: true,
@@ -128,8 +168,12 @@ class AgendamentosScreen extends StatelessWidget {
                 Row(
                   children: [
                     Checkbox(
-                      value: false,
-                      onChanged: (bool? value) {},
+                      value: isClienteExistente,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          isClienteExistente = value ?? false;
+                        });
+                      },
                     ),
                     const Text('Já é cliente?'),
                   ],
@@ -145,7 +189,7 @@ class AgendamentosScreen extends StatelessWidget {
                         16.0,
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () => _confirmarAgendamento(context),
                     color: MColors.blue,
                   ),
                 ),
@@ -157,8 +201,38 @@ class AgendamentosScreen extends StatelessWidget {
     );
   }
 
-  // Função auxiliar para construir os campos de texto do formulário
-  Widget buildTextField(String label, String hint) {
+  Widget _buildClienteDropdown() {
+    return Observer(
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Tutor:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              DropdownButtonFormField<String>(
+                items: controller.clients.map((client) {
+                  return DropdownMenuItem(
+                    value: client.nome,
+                    child: Text(client.nome),
+                  );
+                }).toList(),
+                onChanged: (value) {},
+                decoration: const InputDecoration(
+                  hintText: 'Selecione um cliente',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildTextField(
+      String label, String hint, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -166,6 +240,7 @@ class AgendamentosScreen extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
           TextFormField(
+            controller: controller,
             decoration: InputDecoration(
               hintText: hint,
               border: const OutlineInputBorder(),
@@ -176,7 +251,6 @@ class AgendamentosScreen extends StatelessWidget {
     );
   }
 
-  // Campo de data com DatePicker
   Widget buildDateField(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,11 +272,34 @@ class AgendamentosScreen extends StatelessWidget {
               lastDate: DateTime(2101),
             );
             if (picked != null) {
-              // Lógica para formatar a data selecionada
+              setState(() {
+                selectedDate = picked;
+              });
+              // Formatar e exibir a data no campo
+              // Exemplo de formatação:
+              // final formattedDate = DateFormat('dd/MM/yyyy').format(picked);
+              // dataController.text = formattedDate;
             }
           },
         ),
       ],
     );
+  }
+
+  Future<void> _confirmarAgendamento(BuildContext context) async {
+    // Aqui você pode implementar a lógica de agendamento usando os dados capturados
+    // Exemplo:
+    // final agendamento = Agendamento(
+    //   petNome: petNomeController.text,
+    //   raca: racaController.text,
+    //   idade: idadeController.text,
+    //   peso: pesoController.text,
+    //   sexo: selectedSexo,
+    //   data: selectedDate,
+    //   clienteExistente: isClienteExistente,
+    // );
+
+    // await controller.agendar(agendamento);
+    // Exibir mensagem de sucesso ou erro
   }
 }

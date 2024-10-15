@@ -2,6 +2,7 @@
 
 import 'package:agendamento_pet/constants/app_shared_preferences.dart';
 import 'package:agendamento_pet/constants/dialog_helper.dart';
+import 'package:agendamento_pet/constants/error_handler.dart';
 import 'package:agendamento_pet/domain/model/usuario.dart';
 import 'package:agendamento_pet/domain/usecase/firebase_usecase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,11 +20,11 @@ abstract class _LoginControllerBase with Store {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final FirebaseUsecase _firebaseUsecase;
-  final DialogHelper _helper;
 
-  _LoginControllerBase(this._firebaseUsecase, this._helper);
+  _LoginControllerBase(this._firebaseUsecase);
 
   final sHandler = AppSharedPreferences();
+  final dHelper = DialogHelper();
 
   // Controladores de Texto
   final ctrlNome = TextEditingController();
@@ -74,7 +75,7 @@ abstract class _LoginControllerBase with Store {
 
   // Formatter
   final maskTextInputFormatter = MaskTextInputFormatter(
-      mask: "+## (##) #####-####", filter: {"#": RegExp(r'[0-9]')});
+      mask: "(##) #####-####", filter: {"#": RegExp(r'[0-9]')});
 
   // Validators
 
@@ -130,36 +131,33 @@ abstract class _LoginControllerBase with Store {
     obscureText = !obscureText;
   }
 
-  // Função principal de login/cadastro
-  @action
-  Future<void> login(BuildContext context) async {
-    if (formKey.currentState?.validate() ?? false) {
-      _firstLogin ? await _signUp(context) : await _signIn(context);
-    }
-  }
-
   // Função de login
   @action
-  Future<void> _signIn(BuildContext context) async {
+  Future<void> signIn(BuildContext context) async {
     _loading = true;
     try {
-      await _helper.showSuccessDialog(context, "Realizando acesso, aguarde...");
+      dHelper.showSimpleMessage(context, "Realizando acesso, aguarde...");
+
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: ctrlEmail.text,
         password: ctrlSenha.text,
       );
 
+      Navigator.of(context).pop();
+
       final userDetails =
           await _firebaseUsecase.getUserDetails(userCredential.user!.uid);
       ctrlNome.text = userDetails?.name ?? '';
       ctrlEmail.text = userDetails?.email ?? '';
-      userPhotoURL = userDetails?.photoURL ?? '';
 
       await saveCampos();
       Navigator.of(context).pushNamed("/home");
     } on FirebaseAuthException catch (e) {
-      await _helper.showErrorDialog(
-          context, "Erro ao fazer login: ${e.message}");
+      Navigator.of(context).pop();
+
+      String errorMessage = ErrorHandler.getErrorMessage(e);
+
+      await dHelper.showErrorDialog(context, errorMessage);
     } finally {
       _loading = false;
     }
@@ -167,11 +165,11 @@ abstract class _LoginControllerBase with Store {
 
   // Função de cadastro
   @action
-  Future<void> _signUp(BuildContext context) async {
+  Future<void> signUp(BuildContext context) async {
     _loading = true;
     try {
-      await _helper.showSimpleMessage(
-          context, "Realizando cadastro, aguarde...");
+      dHelper.showSimpleMessage(context, "Realizando cadastro, aguarde...");
+
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: ctrlEmail.text,
@@ -195,14 +193,19 @@ abstract class _LoginControllerBase with Store {
       await _firebaseUsecase.registerUser(usuario);
 
       await saveCampos();
-      await _helper.showSuccessDialog(
+
+      Navigator.of(context).pop();
+
+      await dHelper.showSuccessDialog(
           context, "Cadastro realizado com sucesso!");
+
       Navigator.of(context).pushNamed("/home");
     } on FirebaseAuthException catch (e) {
-      await _helper.showErrorDialog(
-        context,
-        "Erro ao criar conta: ${e.message}",
-      );
+      Navigator.of(context).pop();
+
+      String errorMessage = ErrorHandler.getErrorMessage(e);
+
+      await dHelper.showErrorDialog(context, errorMessage);
     } finally {
       _loading = false;
     }
@@ -215,13 +218,6 @@ abstract class _LoginControllerBase with Store {
     await sHandler.savePreferences("password", ctrlSenha.text.trim());
   }
 
-  // Função para cadastrar usuário (separada, se necessário)
-  @action
-  Future<void> cadastrar(BuildContext context) async {
-    _firstLogin = false;
-    await login(context);
-  }
-
   // Função para redefinir a senha
   @action
   Future<void> redefinir(BuildContext context) async {
@@ -229,12 +225,12 @@ abstract class _LoginControllerBase with Store {
       if (formKey.currentState != null) {
         if (formKey.currentState!.validate()) {
           await _auth.sendPasswordResetEmail(email: ctrlEmail.text);
-          await _helper.showSuccessDialog(
+          await dHelper.showSuccessDialog(
               context, "Email de redefinição de senha enviado!");
         }
       }
     } catch (e) {
-      await _helper.showErrorDialog(context, "Erro ao redefinir senha: $e");
+      await dHelper.showErrorDialog(context, "Erro ao redefinir senha: $e");
     }
   }
 

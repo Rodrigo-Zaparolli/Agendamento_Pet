@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -9,7 +11,6 @@ var maskTextInputFormatter = MaskTextInputFormatter(
 
 class NameValiditor {
   static String? validate(String val) {
-    print(val);
     if (val.isEmpty) {
       return "Enter your name";
     } else if (val.length < 2) {

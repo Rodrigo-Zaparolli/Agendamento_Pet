@@ -19,6 +19,7 @@ class CustomAppBarWidget extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       elevation: 0.0,
       backgroundColor: backgroundColor,
       leading: leading,

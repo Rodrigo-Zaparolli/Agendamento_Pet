@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
     // ignore: prefer_const_constructors
     DashboardScreen(),
     const AgendamentosScreen(),
-    ClientesScreen(),
+    const ClientesScreen(),
     const PetsScreen(),
     const RelatoriosScreen(),
     const RelatoriosScreen(),
@@ -68,11 +68,14 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pushNamed("/user"),
+              child: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person),
+              ),
             ),
           ),
         ],
@@ -87,7 +90,6 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: Container(
         color: MColors.primaryWhite,
-        // padding: const EdgeInsets.symmetric(horizontal: 15.0),
         child: BottomNavigationBar(
           elevation: 5.0,
           selectedItemColor: MColors.blue,

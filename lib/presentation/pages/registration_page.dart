@@ -178,25 +178,6 @@ class _RegistrationPageState
                             style: normalFont(MColors.textGrey, null),
                           ),
                         ),
-                        CustomTextFieldWidget(
-                          controller: controller.ctrlPhone,
-                          labelText: "e.g +55 (54) 12345 6789",
-                          onSaved: (val) => controller.phone = val,
-                          enabled: controller.isEnabled,
-                          validator: controller.validatePhoneNumber,
-                          obscureText: false,
-                          enableSuggestions: true,
-                          keyboardType: const TextInputType.numberWithOptions(),
-                          inputFormatters: [controller.maskTextInputFormatter],
-                          suffix: null,
-                          textfieldBorder: 0.50,
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          "Seu número deve conter o código do país e o código do estado",
-                          style: normalFont(MColors.blue, null),
-                        ),
-                        const SizedBox(height: 20.0),
                         const SizedBox(height: 20.0),
                         controller.isButtonDisabled == true
                             ? CustomButtomWidget(
@@ -205,15 +186,13 @@ class _RegistrationPageState
                                 color: Colors.white)
                             : CustomButtomWidget(
                                 buttonChild: Text(
-                                  "Próximo Passo",
+                                  "Realizar Cadastro",
                                   style: boldFont(
                                     MColors.primaryWhite,
                                     16.0,
                                   ),
                                 ),
-                                onPressed: () => controller.isButtonDisabled
-                                    ? null
-                                    : controller.cadastrar(context),
+                                onPressed: () => controller.signUp(context),
                                 color: MColors.blue,
                               ),
                         const SizedBox(height: 20.0),

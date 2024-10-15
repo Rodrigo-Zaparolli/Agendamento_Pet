@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 class Strings {
   static String appName = "Pet Shop";
   static const String onBoardTitle_sub1 =

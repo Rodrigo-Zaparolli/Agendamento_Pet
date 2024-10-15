@@ -3,6 +3,7 @@ import 'package:agendamento_pet/presentation/pages/home_page.dart';
 import 'package:agendamento_pet/presentation/pages/index_page.dart';
 import 'package:agendamento_pet/presentation/pages/login_page.dart';
 import 'package:agendamento_pet/presentation/pages/registration_page.dart';
+import 'package:agendamento_pet/presentation/pages/user_page.dart';
 import 'package:flutter/material.dart';
 
 class Routes {
@@ -16,6 +17,8 @@ class Routes {
         return SlideRightRoute(widget: const RegistrationPage());
       case homeRoute:
         return SlideRightRoute(widget: const HomePage());
+      case userRoute:
+        return SlideRightRoute(widget: const UserPage());
       default:
         return SlideRightRoute(widget: const IndexPage());
     }
