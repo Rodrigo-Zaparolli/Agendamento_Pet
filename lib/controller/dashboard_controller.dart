@@ -46,6 +46,8 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController nascimentoPetController = TextEditingController();
   final TextEditingController idadePetController = TextEditingController();
   final TextEditingController pesoPetController = TextEditingController();
+  final TextEditingController idadeDecimalPetController = TextEditingController();
+  final TextEditingController tutorController = TextEditingController();
 
   final dHelper = DialogHelper();
 
@@ -199,6 +201,7 @@ abstract class _DashboardControllerBase with Store {
     nascimentoPetController.clear();
     idadePetController.clear();
     pesoPetController.clear();
+    tutorController.clear();
   }
 
   // Método para validar os campos obrigatórios
@@ -244,8 +247,9 @@ abstract class _DashboardControllerBase with Store {
     required String tipoPet,
     required String raca,
     required String porte,
+    required String tutor,
   }) async {
-    if (!_validatePetFields(raca, tipoPet, sexo, porte)) return;
+    if (!_validatePetFields(raca, tipoPet, sexo, porte, tutor)) return;
 
     try {
       final pet = Pet(
@@ -258,6 +262,7 @@ abstract class _DashboardControllerBase with Store {
         peso: pesoPetController.text,
         sexo: sexo,
         tipo: tipoPet,
+        tutor: tutor,
       );
 
       await firebaseUsecase.addPet(pet);
@@ -273,12 +278,14 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
-  bool _validatePetFields(String raca, String tipoPet, String sexo, String porte) {
+  bool _validatePetFields(
+      String raca, String tipoPet, String sexo, String porte, String tutor) {
     if (nomePetController.text.isEmpty ||
         raca.isEmpty ||
         porte.isEmpty ||
         tipoPet.isEmpty ||
         sexo.isEmpty ||
+        tutor.isEmpty ||
         nascimentoPetController.text.isEmpty ||
         idadePetController.text.isEmpty ||
         pesoPetController.text.isEmpty) {

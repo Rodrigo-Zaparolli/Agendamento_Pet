@@ -290,7 +290,7 @@ class _DashboardScreenState
                                 ? Icon(MdiIcons.cat, color: MColors.blue)
                                 : Icon(MdiIcons.dog, color: MColors.blue),
                             title: Text(pets.nome),
-                            subtitle: Text("${pets.tipo} - ${pets.raca}"),
+                            subtitle: Text("${pets.tipo} - ${pets.raca} - ${pets.tutor}"),
                             onTap: () {},
                           ),
                         );

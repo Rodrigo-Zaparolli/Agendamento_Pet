@@ -23,8 +23,10 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
   String tipoPorteSelecionado = 'Escolha';
   String racaSelecionada = 'Escolha';
   String porteSelecionado = 'Escolha';
+  String tutorSelecionado = 'Escolha';
   DateTime? dataNascimento;
 
+  List<String> racasSelecionadas = [];
 
   final Map<String, List<String>> porte = {
     'Cão': [
@@ -39,7 +41,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     ],
   };
 
-    final Map<String, List<String>> portePequeno = {
+  final Map<String, List<String>> portePequeno = {
     'Cão': [
       'Affenpinscher',
       'Bichon Frisé',
@@ -71,7 +73,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     ],
   };
 
-      final Map<String, List<String>> porteMedio = {
+  final Map<String, List<String>> porteMedio = {
     'Cão': [
       'American Staffordshire Terrier',
       'Australian Shepherd',
@@ -103,7 +105,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     ],
   };
 
-        final Map<String, List<String>> porteGrande = {
+  final Map<String, List<String>> porteGrande = {
     'Cão': [
       'Akita Inu',
       'Bernese Mountain Dog',
@@ -159,27 +161,33 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     if (data != null && data.isNotEmpty) {
       final DateTime nascimento = DateFormat('dd/MM/yyyy').parse(data);
       final DateTime agora = DateTime.now();
-      final int idadeAnos = agora.year - nascimento.year;
 
-      if (idadeAnos == 0) {
-        final int idadeMeses = agora.month - nascimento.month;
-        final int idadeDias = agora.day - nascimento.day;
+      int idadeAnos = agora.year - nascimento.year;
+      int idadeMeses = agora.month - nascimento.month;
+      int idadeDias = agora.day - nascimento.day;
 
-        if (idadeDias < 0) {
-          controller.idadePetController.text = (idadeMeses - 1).toString();
-        } else {
-          controller.idadePetController.text = idadeMeses.toString();
-        }
-      } else {
-        if (agora.isBefore(
-            DateTime(nascimento.year, nascimento.month, nascimento.day))) {
-          controller.idadePetController.text = (idadeAnos - 1).toString();
-        } else {
-          controller.idadePetController.text = idadeAnos.toString();
-        }
+      if (idadeMeses < 0 || (idadeMeses == 0 && idadeDias < 0)) {
+        idadeAnos--;
+        idadeMeses += 12;
       }
+
+      int totalMeses = idadeAnos * 12 + idadeMeses;
+
+      if (totalMeses == 0) {
+        controller.idadePetController.text = 'menos de um mês';
+      } else if (idadeAnos == 0) {
+        controller.idadePetController.text = '${totalMeses} meses';
+      } else {
+        controller.idadePetController.text =
+            '$idadeAnos anos e $idadeMeses meses';
+      }
+
+      double idadeDecimal = totalMeses / 12.0;
+      controller.idadeDecimalPetController.text =
+          idadeDecimal.toStringAsFixed(1);
     } else {
       controller.idadePetController.clear();
+      controller.idadeDecimalPetController.clear();
     }
   }
 
@@ -195,7 +203,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
             child: Row(
               children: [
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: Card(
                     elevation: 5,
                     shape: RoundedRectangleBorder(
@@ -250,7 +258,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                               ),
                               const SizedBox(height: 16),
 
-					                    Row(
+                              Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Expanded(
@@ -259,9 +267,11 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       ['Escolha', 'Cão', 'Gato'],
                                       onChanged: (value) {
                                         setState(() {
-                                          tipoPorteSelecionado =
+                                          tipoPetSelecionado =
                                               value ?? 'Escolha';
                                           porteSelecionado = 'Escolha';
+                                          racasSelecionadas = [];
+                                          racaSelecionada = 'Escolha';
                                         });
                                       },
                                       validator: (value) {
@@ -273,38 +283,67 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       },
                                     ),
                                   ),
-
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: buildDropdownField(
                                       'Porte:',
-                                      tipoPorteSelecionado == 'Escolha'
+                                      tipoPetSelecionado == 'Escolha'
                                           ? ['Escolha']
-                                          : porte[tipoPorteSelecionado] ??
+                                          : porte[tipoPetSelecionado] ??
                                               ['Escolha'],
                                       onChanged: (value) {
                                         setState(() {
                                           porteSelecionado = value ?? 'Escolha';
+                                          racasSelecionadas = [];
+                                          racaSelecionada = 'Escolha';
+
+                                          if (tipoPetSelecionado == 'Cão') {
+                                            if (porteSelecionado == 'Pequeno') {
+                                              racasSelecionadas =
+                                                  portePequeno['Cão'] ?? [];
+                                            } else if (porteSelecionado ==
+                                                'Médio') {
+                                              racasSelecionadas =
+                                                  porteMedio['Cão'] ?? [];
+                                            } else if (porteSelecionado ==
+                                                'Grande') {
+                                              racasSelecionadas =
+                                                  porteGrande['Cão'] ?? [];
+                                            }
+                                          } else if (tipoPetSelecionado ==
+                                              'Gato') {
+                                            if (porteSelecionado ==
+                                                'Pequeno, de 2 a 4 kg') {
+                                              racasSelecionadas =
+                                                  portePequeno['Gato'] ?? [];
+                                            } else if (porteSelecionado ==
+                                                'Médio, de 4 a 6 kg') {
+                                              racasSelecionadas =
+                                                  porteMedio['Gato'] ?? [];
+                                            } else if (porteSelecionado ==
+                                                'Grande, acima de 6 kg') {
+                                              racasSelecionadas =
+                                                  porteGrande['Gato'] ?? [];
+                                            }
+                                          }
                                         });
                                       },
                                       validator: (value) {
                                         if (value == null ||
                                             value == 'Escolha') {
-                                          return 'Por favor, selecione a raça';
+                                          return 'Por favor, selecione o porte';
                                         }
                                         return null;
                                       },
                                     ),
                                   ),
-                                  
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: buildDropdownField(
                                       'Raça:',
-                                      tipoPorteSelecionado == 'Escolha'
+                                      racasSelecionadas.isEmpty
                                           ? ['Escolha']
-                                          : racas[tipoPorteSelecionado] ??
-                                              ['Escolha'],
+                                          : racasSelecionadas,
                                       onChanged: (value) {
                                         setState(() {
                                           racaSelecionada = value ?? 'Escolha';
@@ -318,8 +357,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                         return null;
                                       },
                                     ),
-                                  ),                  
-
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -344,9 +382,11 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       },
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
                                   IconButton(
-                                    icon: const Icon(Icons.calendar_today),
+                                    icon: const Icon(
+                                      Icons.calendar_today,
+                                      size: 40,
+                                    ),
                                     onPressed: () async {
                                       final DateTime? picked =
                                           await showDatePicker(
@@ -370,6 +410,16 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       }
                                     },
                                   ),
+                                  Expanded(
+                                    child: buildTextField(
+                                      'Idade (decimal):',
+                                      'Idade do Pet (ex: 0,3)',
+                                      controller.idadeDecimalPetController,
+                                      keyboardType: TextInputType.number,
+                                      readOnly:
+                                          true, // Para que o usuário não possa editar
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -391,8 +441,24 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       },
                                     ),
                                   ),
-                                ],
-                              ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: buildTextField(
+                                    'Tutor:',
+                                    'Nome do tutor',
+                                    controller.tutorController,
+                                    validator: (value) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
+                                        return 'Por favor, insira o nome do tutor';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+
                               const SizedBox(height: 32),
                               // Botão de Confirmação
                               Center(
@@ -415,6 +481,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                           tipoPet: tipoPetSelecionado,
                                           porte: porteSelecionado,
                                           raca: racaSelecionada,
+                                          tutor: tutorSelecionado,
                                         );
                                         controller.clearFields();
                                       }

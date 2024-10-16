@@ -157,13 +157,15 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       required String sexo,
       required String tipoPet,
       required String raca,
-      required String porte}) {
+      required String porte,
+      required String tutor}) {
     return _$cadastrarPetAsyncAction.run(() => super.cadastrarPet(
         context: context,
         sexo: sexo,
         tipoPet: tipoPet,
         raca: raca,
-        porte: porte));
+        porte: porte,
+        tutor: tutor));
   }
 
   late final _$deletePetAsyncAction =

@@ -16,6 +16,7 @@ Pet _$PetFromJson(Map<String, dynamic> json) => Pet(
       peso: json['peso'] as String,
       sexo: json['sexo'] as String,
       tipo: json['tipo'] as String,
+      tutor: json['tutor'] as String,
     );
 
 Map<String, dynamic> _$PetToJson(Pet instance) => <String, dynamic>{
@@ -28,4 +29,5 @@ Map<String, dynamic> _$PetToJson(Pet instance) => <String, dynamic>{
       'peso': instance.peso,
       'sexo': instance.sexo,
       'tipo': instance.tipo,
+      'tutor': instance.tutor,
     };
