@@ -47,7 +47,8 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController idadePetController = TextEditingController();
   final TextEditingController pesoPetController = TextEditingController();
   final TextEditingController idadeDecimalPetController = TextEditingController();
-  final TextEditingController tutorController = TextEditingController();
+  final TextEditingController tutorController= TextEditingController();
+ // final TextEditingController searchController = TextEditingController();
 
   final dHelper = DialogHelper();
 
@@ -160,6 +161,82 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
+    @action
+  Future<void> searchPets(String query) async {
+    isLoadingPet = true;
+    errorMessage = '';
+
+    try {
+      if (query.isEmpty) {
+        await fetchPets();
+        return;
+      }
+
+      final result = await firebaseUsecase.fetchPets();
+
+      // Filtra os pets com base na consulta
+      pets = ObservableList.of(
+        result
+            .where((pet) =>
+                pet.nome.toLowerCase().contains(query.toLowerCase()))
+            .toList(),
+      );
+
+      if (pets.isEmpty) {
+        errorMessage = 'Nenhum pet encontrado para "$query".';
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      print("Erro ao buscar pets: $e");
+    } finally {
+      isLoadingPet = false;
+    }
+  }
+
+  //@action
+  //Future<void> fetchPets() async {
+   // isLoadingPet = true;
+   // errorMessagePet = '';
+
+   // try {
+    //  final result = await firebaseUsecase.fetchPets();
+    //  pets = ObservableList.of(result);
+
+    //  if (pets.isEmpty) {
+     //   errorMessagePet = 'Nenhum pet cadastrado.';
+    //  }
+  //  } catch (e) {
+   //   errorMessagePet = e.toString();
+ //     print("Erro ao buscar pets: $e");
+  //  } finally {
+   //   isLoadingPet = false;
+   // }
+//  }
+
+  @action
+  Future<void> fetchPets() async {
+    isLoadingPet = true;
+    errorMessage = '';
+    print('Iniciando fetchPets...');
+
+    try {
+      final result = await firebaseUsecase.fetchPets();
+      print('Firestore retornou ${result.length} pets.');
+      pets = ObservableList.of(result);
+
+      if (pets.isEmpty) {
+        errorMessage = 'Nenhum pet cadastrado.';
+        print(errorMessage);
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      print("Erro ao buscar pets: $e");
+    } finally {
+      isLoadingPet = false;
+      print('fetchPets concluído. isLoadingPet: $isLoadingPet');
+    }
+  }
+
   @action
   Future<void> searchCep(String cep, BuildContext context) async {
     try {
@@ -221,26 +298,6 @@ abstract class _DashboardControllerBase with Store {
   }
 
   @action
-  Future<void> fetchPets() async {
-    isLoadingPet = true;
-    errorMessagePet = '';
-
-    try {
-      final result = await firebaseUsecase.fetchPets();
-      pets = ObservableList.of(result);
-
-      if (pets.isEmpty) {
-        errorMessagePet = 'Nenhum pet cadastrado.';
-      }
-    } catch (e) {
-      errorMessagePet = e.toString();
-      print("Erro ao buscar pets: $e");
-    } finally {
-      isLoadingPet = false;
-    }
-  }
-
-  @action
   Future<void> cadastrarPet({
     required BuildContext context,
     required String sexo,
@@ -262,7 +319,7 @@ abstract class _DashboardControllerBase with Store {
         peso: pesoPetController.text,
         sexo: sexo,
         tipo: tipoPet,
-        tutor: tutor,
+        tutor: tutorController.text,
       );
 
       await firebaseUsecase.addPet(pet);

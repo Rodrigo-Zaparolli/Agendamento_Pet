@@ -441,6 +441,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       },
                                     ),
                                   ),
+
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: buildTextField(

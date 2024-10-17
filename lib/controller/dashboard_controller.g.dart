@@ -143,6 +143,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   late final _$fetchPetsAsyncAction =
       AsyncAction('_DashboardControllerBase.fetchPets', context: context);
 
+  late final _$searchPetsAsyncAction =
+      AsyncAction('_DashboardControllerBase.searchPets', context: context);
+
+
+  @override
+
+  Future<void> searchPets(String query) {
+    return _$searchPetsAsyncAction.run(() => super.searchPets(query));
+  }
+
   @override
   Future<void> fetchPets() {
     return _$fetchPetsAsyncAction.run(() => super.fetchPets());

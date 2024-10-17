@@ -152,6 +152,8 @@ class _DashboardScreenState
                     ),
                   ],
                 ),
+
+                //Procurar Clientes
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -240,7 +242,7 @@ class _DashboardScreenState
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -257,7 +259,45 @@ class _DashboardScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+
+            // Procurar Pets
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller.searchController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Procurar Pets',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      controller.searchPets(value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    String query = controller.searchController.text.trim();
+                    controller.searchPets(query);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: MColors.blue,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Icon(Icons.search, color: Colors.white),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             Observer(
               builder: (_) {
                 if (controller.isLoadingPet) {
@@ -290,7 +330,8 @@ class _DashboardScreenState
                                 ? Icon(MdiIcons.cat, color: MColors.blue)
                                 : Icon(MdiIcons.dog, color: MColors.blue),
                             title: Text(pets.nome),
-                            subtitle: Text("${pets.tipo} - ${pets.raca} - ${pets.tutor}"),
+                            subtitle: Text(
+                                "${pets.tipo} - ${pets.raca} - ${pets.tutor}"),
                             onTap: () {},
                           ),
                         );
