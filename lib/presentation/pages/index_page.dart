@@ -7,6 +7,7 @@ import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class IndexPage extends StatelessWidget {
   const IndexPage({super.key});
@@ -40,7 +41,7 @@ class IndexPage extends StatelessWidget {
                 const SizedBox(height: 10.0),
                 Text(
                   Strings.onBoardTitle_sub1,
-                  style: normalFont(MColors.textGrey, 18.0),
+                  style: normalFont(MColors.textGrey, 6.sp),
                   textAlign: TextAlign.center,
                 ),
               ],

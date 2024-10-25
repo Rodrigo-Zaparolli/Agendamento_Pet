@@ -1,11 +1,18 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:agendamento_pet/controller/dashboard_controller.dart';
 import 'package:agendamento_pet/core/utils/all_widgets.dart';
 import 'package:agendamento_pet/core/utils/colors.dart';
 import 'package:agendamento_pet/core/utils/widget_stateful.dart';
+import 'package:agendamento_pet/domain/model/agendamento.dart';
+import 'package:agendamento_pet/domain/model/pet.dart';
+import 'package:agendamento_pet/domain/model/servico.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 
 class AgendamentosScreen extends StatefulWidget {
   const AgendamentosScreen({super.key});
@@ -16,13 +23,13 @@ class AgendamentosScreen extends StatefulWidget {
 
 class _AgendamentosScreenState
     extends WidgetStateful<AgendamentosScreen, DashboardController> {
-  final TextEditingController petNomeController = TextEditingController();
-  final TextEditingController racaController = TextEditingController();
-  final TextEditingController idadeController = TextEditingController();
-  final TextEditingController pesoController = TextEditingController();
-  String? selectedSexo;
-  DateTime? selectedDate;
-  bool isClienteExistente = false;
+  @override
+  void initState() {
+    controller.fetchPets();
+    controller.carregarAgendamentos();
+    controller.fecthServico();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +65,7 @@ class _AgendamentosScreenState
                     Text(
                       'Agendamentos',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 8.sp,
                         fontWeight: FontWeight.bold,
                         color: MColors.blue,
                       ),
@@ -82,7 +89,7 @@ class _AgendamentosScreenState
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    if (controller.clients.isEmpty) {
+                    if (controller.agendamentos.isEmpty) {
                       return const Center(
                         child: Text(
                           'Nenhum agendamento encontrado.',
@@ -93,10 +100,25 @@ class _AgendamentosScreenState
 
                     return Expanded(
                       child: ListView.builder(
-                        itemCount: controller.clients.length,
+                        itemCount: controller.agendamentos.length,
                         itemBuilder: (context, index) {
+                          final agendamento = controller.agendamentos[index];
                           return ListTile(
-                            title: Text(controller.clients[index].nome),
+                            title: Text(agendamento.petNome),
+                            subtitle: Text(
+                              'Raça: ${agendamento.raca}, '
+                              'Idade: ${agendamento.idade} anos, '
+                              'Peso: ${agendamento.peso} kg\n'
+                              'serviço: ${agendamento.servico.nome}\n'
+                              'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.dataHora)} '
+                              'Hora: ${DateFormat('HH:mm').format(agendamento.dataHora)}',
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                _confirmarExclusao(context, agendamento);
+                              },
+                            ),
                           );
                         },
                       ),
@@ -137,16 +159,31 @@ class _AgendamentosScreenState
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildClienteDropdown(),
-                buildTextField('Pet:', 'Nome do pet', petNomeController),
-                buildTextField('Raça:', 'Raça', racaController),
-                buildTextField('Idade:', 'Idade do pet', idadeController),
-                buildTextField('Peso:', 'Peso do pet', pesoController),
-                const SizedBox(height: 16),
+                _buildPetDropdown(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: buildTextField(
+                          'Raça:', 'Raça', controller.racaPetController),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: buildTextField('Idade:', 'Idade do pet',
+                          controller.idadePetController),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: buildTextField(
+                          'Peso:', 'Peso do pet', controller.pesoPetController),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 const Text('Sexo:',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 DropdownButtonFormField<String>(
-                  value: selectedSexo,
+                  value: controller.selectedSexo,
                   items: ['Escolha', 'Macho', 'Fêmea']
                       .map((label) => DropdownMenuItem(
                             value: label,
@@ -155,7 +192,7 @@ class _AgendamentosScreenState
                       .toList(),
                   onChanged: (value) {
                     setState(() {
-                      selectedSexo = value;
+                      controller.selectedSexo = value;
                     });
                   },
                   decoration: const InputDecoration(
@@ -164,20 +201,9 @@ class _AgendamentosScreenState
                   ),
                 ),
                 const SizedBox(height: 16),
+                _buildServicoDropdown(),
+                const SizedBox(height: 16),
                 buildDateField(context),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: isClienteExistente,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          isClienteExistente = value ?? false;
-                        });
-                      },
-                    ),
-                    const Text('Já é cliente?'),
-                  ],
-                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -201,7 +227,7 @@ class _AgendamentosScreenState
     );
   }
 
-  Widget _buildClienteDropdown() {
+  Widget _buildPetDropdown() {
     return Observer(
       builder: (_) {
         return Padding(
@@ -209,19 +235,32 @@ class _AgendamentosScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Tutor:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              DropdownButtonFormField<String>(
-                items: controller.clients.map((client) {
-                  return DropdownMenuItem(
-                    value: client.nome,
-                    child: Text(client.nome),
-                  );
-                }).toList(),
-                onChanged: (value) {},
-                decoration: const InputDecoration(
-                  hintText: 'Selecione um cliente',
-                  border: OutlineInputBorder(),
+              const Text('Pet:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  )),
+              SizedBox(
+                width: double.infinity,
+                child: DropdownButtonFormField<Pet>(
+                  value: controller.selectedPet,
+                  items: controller.pets.map((pet) {
+                    return DropdownMenuItem(
+                      value: pet,
+                      child: Text(pet.nome),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      controller.selectedPet = value;
+                      if (controller.selectedPet != null) {
+                        _fillPetDetails(controller.selectedPet!);
+                      }
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Selecione um pet',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
             ],
@@ -231,6 +270,52 @@ class _AgendamentosScreenState
     );
   }
 
+  Widget _buildServicoDropdown() {
+    return Observer(
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Serviço:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(
+                width: double.infinity,
+                child: DropdownButtonFormField<Servico>(
+                  value: controller.selectedServico,
+                  items: controller.servico.map((servico) {
+                    return DropdownMenuItem(
+                      value: servico,
+                      child: Text(
+                          "${servico.nome} - R\$ ${servico.preco.toStringAsFixed(2)}"),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      controller.selectedServico = value;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Selecione um serviço',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _fillPetDetails(Pet pet) {
+    controller.racaPetController.text = pet.raca;
+    controller.idadePetController.text = pet.idade.toString();
+    controller.pesoPetController.text = pet.peso.toString();
+    controller.selectedSexo = pet.sexo;
+  }
+
   Widget buildTextField(
       String label, String hint, TextEditingController controller) {
     return Padding(
@@ -238,7 +323,10 @@ class _AgendamentosScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              )),
           TextFormField(
             controller: controller,
             decoration: InputDecoration(
@@ -255,30 +343,52 @@ class _AgendamentosScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Data e Hora:',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         TextFormField(
+          controller: controller.dataController,
+          readOnly: true,
           decoration: const InputDecoration(
-            hintText: 'dd/mm/aaaa, --:--',
+            hintText: 'dd/MM/aaaa, --:--',
             suffixIcon: Icon(Icons.calendar_today),
             border: OutlineInputBorder(),
           ),
           onTap: () async {
             FocusScope.of(context).requestFocus(FocusNode());
-            DateTime? picked = await showDatePicker(
+
+            // Seleciona a data
+            DateTime? pickedDate = await showDatePicker(
               context: context,
               initialDate: DateTime.now(),
               firstDate: DateTime(2000),
               lastDate: DateTime(2101),
             );
-            if (picked != null) {
-              setState(() {
-                selectedDate = picked;
-              });
-              // Formatar e exibir a data no campo
-              // Exemplo de formatação:
-              // final formattedDate = DateFormat('dd/MM/yyyy').format(picked);
-              // dataController.text = formattedDate;
+
+            if (pickedDate != null) {
+              // Seleciona a hora
+              TimeOfDay? pickedTime = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+              );
+
+              if (pickedTime != null) {
+                // Combina data e hora
+                final DateTime selectedDateTime = DateTime(
+                  pickedDate.year,
+                  pickedDate.month,
+                  pickedDate.day,
+                  pickedTime.hour,
+                  pickedTime.minute,
+                );
+
+                // Formata data e hora
+                setState(() {
+                  controller.selectedDate = selectedDateTime;
+                  controller.dataController.text =
+                      DateFormat('dd/MM/yyyy, HH:mm').format(selectedDateTime);
+                });
+              }
             }
           },
         ),
@@ -287,19 +397,73 @@ class _AgendamentosScreenState
   }
 
   Future<void> _confirmarAgendamento(BuildContext context) async {
-    // Aqui você pode implementar a lógica de agendamento usando os dados capturados
-    // Exemplo:
-    // final agendamento = Agendamento(
-    //   petNome: petNomeController.text,
-    //   raca: racaController.text,
-    //   idade: idadeController.text,
-    //   peso: pesoController.text,
-    //   sexo: selectedSexo,
-    //   data: selectedDate,
-    //   clienteExistente: isClienteExistente,
-    // );
+    try {
+      if (controller.selectedPet == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione um pet.')),
+        );
+        return;
+      }
 
-    // await controller.agendar(agendamento);
-    // Exibir mensagem de sucesso ou erro
+      // Verifica se userId está disponível
+      final String userId =
+          controller.currentUserId; // Ajuste conforme necessário
+
+      final agendamento = Agendamento(
+        petNome: controller.selectedPet!.nome,
+        raca: controller.racaPetController.text,
+        idade: controller.idadePetController.text,
+        peso: controller.pesoPetController.text,
+        sexo: controller.selectedSexo!,
+        dataHora: controller.selectedDate!,
+        servico: controller.selectedServico!,
+        petId: controller.selectedPet!.id,
+        userId: userId,
+      );
+
+      bool existeAgendamentoNoMesmoHorario = controller.agendamentos
+          .any((a) => a.dataHora.isAtSameMomentAs(agendamento.dataHora));
+
+      if (existeAgendamentoNoMesmoHorario) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Já existe um agendamento para este horário.')),
+        );
+        return;
+      }
+
+      await controller.salvarAgendamento(agendamento, context);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _confirmarExclusao(BuildContext context, Agendamento agendamento) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Excluir Agendamento'),
+          content: Text(
+              'Tem certeza que deseja excluir o agendamento de ${agendamento.petNome}?'),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Excluir'),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Fecha o dialog
+                await controller
+                    .excluirAgendamento(agendamento); // Exclui o agendamento
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

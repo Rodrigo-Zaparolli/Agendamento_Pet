@@ -36,15 +36,15 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
-    final dioDi = _$DioDi();
     final firebaseModule = _$FirebaseModule();
-    gh.factory<_i361.BaseOptions>(() => dioDi.options);
+    final dioDi = _$DioDi();
     await gh.factoryAsync<_i982.FirebaseApp>(
       () => firebaseModule.initFirebaseApp,
       preResolve: true,
     );
     gh.factory<_i59.FirebaseAuth>(() => firebaseModule.auth);
     gh.factory<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
+    gh.factory<_i361.BaseOptions>(() => dioDi.options);
     gh.lazySingleton<_i361.Dio>(() => dioDi.dio());
     gh.factory<_i29.BuscaCepRepository>(
         () => _i29.BuscaCepRepositoryImpl(gh<_i361.Dio>()));
@@ -56,16 +56,17 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i941.FirebaseUsecase>(
         () => _i941.FirebaseUsecaseImpl(gh<_i935.FirestoreRepository>()));
-    gh.factory<_i32.LoginController>(
-        () => _i32.LoginController(gh<_i941.FirebaseUsecase>()));
     gh.factory<_i75.DashboardController>(() => _i75.DashboardController(
           gh<_i941.FirebaseUsecase>(),
           gh<_i279.BuscaCepUseCase>(),
+          gh<_i59.FirebaseAuth>(),
         ));
+    gh.factory<_i32.LoginController>(
+        () => _i32.LoginController(gh<_i941.FirebaseUsecase>()));
     return this;
   }
 }
 
-class _$DioDi extends _i1015.DioDi {}
-
 class _$FirebaseModule extends _i135.FirebaseModule {}
+
+class _$DioDi extends _i1015.DioDi {}

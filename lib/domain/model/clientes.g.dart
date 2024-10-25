@@ -10,22 +10,24 @@ Clientes _$ClientesFromJson(Map<String, dynamic> json) => Clientes(
       id: json['id'] as String,
       nome: json['nome'] as String,
       sexo: json['sexo'] as String,
-      idade: json['idade'] as String,
+      dataNascimento: DateTime.parse(json['dataNascimento'] as String),
       endereco: json['endereco'] as String,
       numero: json['numero'] as String,
       bairro: json['bairro'] as String,
       cidade: json['cidade'] as String,
       telefone: json['telefone'] as String,
+      userId: json['userId'] as String,
     );
 
 Map<String, dynamic> _$ClientesToJson(Clientes instance) => <String, dynamic>{
       'id': instance.id,
       'nome': instance.nome,
       'sexo': instance.sexo,
-      'idade': instance.idade,
+      'dataNascimento': instance.dataNascimento.toIso8601String(),
       'endereco': instance.endereco,
       'numero': instance.numero,
       'bairro': instance.bairro,
       'cidade': instance.cidade,
       'telefone': instance.telefone,
+      'userId': instance.userId,
     };

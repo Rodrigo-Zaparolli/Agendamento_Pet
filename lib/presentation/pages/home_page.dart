@@ -3,6 +3,7 @@ import 'package:agendamento_pet/core/utils/colors.dart';
 import 'package:agendamento_pet/presentation/screen/agendamentos_screen.dart';
 import 'package:agendamento_pet/presentation/screen/clientes_screen.dart';
 import 'package:agendamento_pet/presentation/screen/dashboard_screen.dart';
+import 'package:agendamento_pet/presentation/screen/servico_screen.dart';
 import 'package:agendamento_pet/presentation/screen/pets_screen.dart';
 import 'package:agendamento_pet/presentation/screen/relatorios_screen.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_app_bar_widget.dart';
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     const ClientesScreen(),
     const PetsScreen(),
     const RelatoriosScreen(),
-    const RelatoriosScreen(),
+    const ServicosScreen(),
   ];
 
   void onTabTapped(int index) {
@@ -41,6 +42,7 @@ class _HomePageState extends State<HomePage> {
     Icons.person,
     Icons.pets,
     Icons.receipt_rounded,
+    Icons.settings,
   ];
 
   final List<String> _appBarTitle = [
@@ -49,7 +51,7 @@ class _HomePageState extends State<HomePage> {
     "Clientes",
     "Pets",
     "Relatórios",
-    "Relatórios",
+    "Manutenções ",
   ];
 
   @override

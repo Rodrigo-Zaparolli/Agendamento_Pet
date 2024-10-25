@@ -45,15 +45,47 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       Atom(name: '_DashboardControllerBase.pets', context: context);
 
   @override
-  ObservableList<Pet> get pets {
+  List<Pet> get pets {
     _$petsAtom.reportRead();
     return super.pets;
   }
 
   @override
-  set pets(ObservableList<Pet> value) {
+  set pets(List<Pet> value) {
     _$petsAtom.reportWrite(value, super.pets, () {
       super.pets = value;
+    });
+  }
+
+  late final _$agendamentosAtom =
+      Atom(name: '_DashboardControllerBase.agendamentos', context: context);
+
+  @override
+  ObservableList<Agendamento> get agendamentos {
+    _$agendamentosAtom.reportRead();
+    return super.agendamentos;
+  }
+
+  @override
+  set agendamentos(ObservableList<Agendamento> value) {
+    _$agendamentosAtom.reportWrite(value, super.agendamentos, () {
+      super.agendamentos = value;
+    });
+  }
+
+  late final _$servicoAtom =
+      Atom(name: '_DashboardControllerBase.servico', context: context);
+
+  @override
+  List<Servico> get servico {
+    _$servicoAtom.reportRead();
+    return super.servico;
+  }
+
+  @override
+  set servico(List<Servico> value) {
+    _$servicoAtom.reportWrite(value, super.servico, () {
+      super.servico = value;
     });
   }
 
@@ -105,15 +137,65 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     });
   }
 
+  late final _$selectedClientAtom =
+      Atom(name: '_DashboardControllerBase.selectedClient', context: context);
+
+  @override
+  String? get selectedClient {
+    _$selectedClientAtom.reportRead();
+    return super.selectedClient;
+  }
+
+  @override
+  set selectedClient(String? value) {
+    _$selectedClientAtom.reportWrite(value, super.selectedClient, () {
+      super.selectedClient = value;
+    });
+  }
+
+  late final _$selectedPetAtom =
+      Atom(name: '_DashboardControllerBase.selectedPet', context: context);
+
+  @override
+  Pet? get selectedPet {
+    _$selectedPetAtom.reportRead();
+    return super.selectedPet;
+  }
+
+  @override
+  set selectedPet(Pet? value) {
+    _$selectedPetAtom.reportWrite(value, super.selectedPet, () {
+      super.selectedPet = value;
+    });
+  }
+
+  late final _$selectedServicoAtom =
+      Atom(name: '_DashboardControllerBase.selectedServico', context: context);
+
+  @override
+  Servico? get selectedServico {
+    _$selectedServicoAtom.reportRead();
+    return super.selectedServico;
+  }
+
+  @override
+  set selectedServico(Servico? value) {
+    _$selectedServicoAtom.reportWrite(value, super.selectedServico, () {
+      super.selectedServico = value;
+    });
+  }
+
   late final _$cadastrarClienteAsyncAction = AsyncAction(
       '_DashboardControllerBase.cadastrarCliente',
       context: context);
 
   @override
   Future<void> cadastrarCliente(
-      {required BuildContext context, required String sexo}) {
-    return _$cadastrarClienteAsyncAction
-        .run(() => super.cadastrarCliente(context: context, sexo: sexo));
+      {required BuildContext context,
+      required String sexo,
+      required DateTime dataNascimento}) {
+    return _$cadastrarClienteAsyncAction.run(() => super.cadastrarCliente(
+        context: context, sexo: sexo, dataNascimento: dataNascimento));
   }
 
   late final _$searchClientsAsyncAction =
@@ -132,30 +214,28 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     return _$fetchClientsAsyncAction.run(() => super.fetchClients());
   }
 
+  late final _$searchPetsAsyncAction =
+      AsyncAction('_DashboardControllerBase.searchPets', context: context);
+
+  @override
+  Future<void> searchPets(String query) {
+    return _$searchPetsAsyncAction.run(() => super.searchPets(query));
+  }
+
+  late final _$fetchPetsAsyncAction =
+      AsyncAction('_DashboardControllerBase.fetchPets', context: context);
+
+  @override
+  Future<void> fetchPets() {
+    return _$fetchPetsAsyncAction.run(() => super.fetchPets());
+  }
+
   late final _$searchCepAsyncAction =
       AsyncAction('_DashboardControllerBase.searchCep', context: context);
 
   @override
   Future<void> searchCep(String cep, BuildContext context) {
     return _$searchCepAsyncAction.run(() => super.searchCep(cep, context));
-  }
-
-  late final _$fetchPetsAsyncAction =
-      AsyncAction('_DashboardControllerBase.fetchPets', context: context);
-
-  late final _$searchPetsAsyncAction =
-      AsyncAction('_DashboardControllerBase.searchPets', context: context);
-
-
-  @override
-
-  Future<void> searchPets(String query) {
-    return _$searchPetsAsyncAction.run(() => super.searchPets(query));
-  }
-
-  @override
-  Future<void> fetchPets() {
-    return _$fetchPetsAsyncAction.run(() => super.fetchPets());
   }
 
   late final _$cadastrarPetAsyncAction =
@@ -168,14 +248,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       required String tipoPet,
       required String raca,
       required String porte,
-      required String tutor}) {
+      required String tutor,
+      required String clienteId}) {
     return _$cadastrarPetAsyncAction.run(() => super.cadastrarPet(
         context: context,
         sexo: sexo,
         tipoPet: tipoPet,
         raca: raca,
         porte: porte,
-        tutor: tutor));
+        tutor: tutor,
+        clienteId: clienteId));
   }
 
   late final _$deletePetAsyncAction =
@@ -186,8 +268,84 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     return _$deletePetAsyncAction.run(() => super.deletePet(petId));
   }
 
+  late final _$carregarAgendamentosAsyncAction = AsyncAction(
+      '_DashboardControllerBase.carregarAgendamentos',
+      context: context);
+
+  @override
+  Future<void> carregarAgendamentos() {
+    return _$carregarAgendamentosAsyncAction
+        .run(() => super.carregarAgendamentos());
+  }
+
+  late final _$verificarDisponibilidadeAsyncAction = AsyncAction(
+      '_DashboardControllerBase.verificarDisponibilidade',
+      context: context);
+
+  @override
+  Future<bool> verificarDisponibilidade(DateTime dataHora) {
+    return _$verificarDisponibilidadeAsyncAction
+        .run(() => super.verificarDisponibilidade(dataHora));
+  }
+
+  late final _$salvarAgendamentoAsyncAction = AsyncAction(
+      '_DashboardControllerBase.salvarAgendamento',
+      context: context);
+
+  @override
+  Future<void> salvarAgendamento(
+      Agendamento agendamento, BuildContext context) {
+    return _$salvarAgendamentoAsyncAction
+        .run(() => super.salvarAgendamento(agendamento, context));
+  }
+
+  late final _$excluirAgendamentoAsyncAction = AsyncAction(
+      '_DashboardControllerBase.excluirAgendamento',
+      context: context);
+
+  @override
+  Future<void> excluirAgendamento(Agendamento agendamento) {
+    return _$excluirAgendamentoAsyncAction
+        .run(() => super.excluirAgendamento(agendamento));
+  }
+
+  late final _$fecthServicoAsyncAction =
+      AsyncAction('_DashboardControllerBase.fecthServico', context: context);
+
+  @override
+  Future<void> fecthServico() {
+    return _$fecthServicoAsyncAction.run(() => super.fecthServico());
+  }
+
+  late final _$addServicoAsyncAction =
+      AsyncAction('_DashboardControllerBase.addServico', context: context);
+
+  @override
+  Future<void> addServico(Servico servico) {
+    return _$addServicoAsyncAction.run(() => super.addServico(servico));
+  }
+
+  late final _$deleteServicoAsyncAction =
+      AsyncAction('_DashboardControllerBase.deleteServico', context: context);
+
+  @override
+  Future<void> deleteServico(String servicoID) {
+    return _$deleteServicoAsyncAction.run(() => super.deleteServico(servicoID));
+  }
+
   late final _$_DashboardControllerBaseActionController =
       ActionController(name: '_DashboardControllerBase', context: context);
+
+  @override
+  void setSelectedPet(Pet pet) {
+    final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
+        name: '_DashboardControllerBase.setSelectedPet');
+    try {
+      return super.setSelectedPet(pet);
+    } finally {
+      _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
+    }
+  }
 
   @override
   void clearFields() {
@@ -228,9 +386,14 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
 isAuthenticated: ${isAuthenticated},
 clients: ${clients},
 pets: ${pets},
+agendamentos: ${agendamentos},
+servico: ${servico},
 isLoading: ${isLoading},
 isLoadingPet: ${isLoadingPet},
-errorMessage: ${errorMessage}
+errorMessage: ${errorMessage},
+selectedClient: ${selectedClient},
+selectedPet: ${selectedPet},
+selectedServico: ${selectedServico}
     ''';
   }
 }

@@ -4,10 +4,13 @@
 
 import 'package:agendamento_pet/constants/app_constanst.dart';
 import 'package:agendamento_pet/constants/dialog_helper.dart';
+import 'package:agendamento_pet/domain/model/agendamento.dart';
 import 'package:agendamento_pet/domain/model/clientes.dart';
 import 'package:agendamento_pet/domain/model/pet.dart';
+import 'package:agendamento_pet/domain/model/servico.dart';
 import 'package:agendamento_pet/domain/usecase/busca_cep_usecase.dart';
 import 'package:agendamento_pet/domain/usecase/firebase_usecase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
@@ -21,15 +24,18 @@ class DashboardController = _DashboardControllerBase with _$DashboardController;
 abstract class _DashboardControllerBase with Store {
   final FirebaseUsecase firebaseUsecase;
   final BuscaCepUseCase _buscaCepUseCase;
+  final FirebaseAuth _firebaseAuth;
 
   _DashboardControllerBase(
     this.firebaseUsecase,
     this._buscaCepUseCase,
+    this._firebaseAuth,
   );
 
   // Controladores para os campos de texto Cliente
   final TextEditingController nomeController = TextEditingController();
-  final TextEditingController idadeController = TextEditingController();
+  final TextEditingController dataNascimentoController =
+      TextEditingController();
   final TextEditingController enderecoController = TextEditingController();
   final TextEditingController numeroController = TextEditingController();
   final TextEditingController bairroController = TextEditingController();
@@ -37,6 +43,7 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController estadoController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
+  final TextEditingController searchPetController = TextEditingController();
   final TextEditingController cepController = TextEditingController();
 
   // Controladores para os campos de texto Pets
@@ -46,9 +53,18 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController nascimentoPetController = TextEditingController();
   final TextEditingController idadePetController = TextEditingController();
   final TextEditingController pesoPetController = TextEditingController();
-  final TextEditingController idadeDecimalPetController = TextEditingController();
-  final TextEditingController tutorController= TextEditingController();
- // final TextEditingController searchController = TextEditingController();
+  final TextEditingController idadeDecimalPetController =
+      TextEditingController();
+  final TextEditingController dataController = TextEditingController();
+
+// Controladores para os campos de texto Serviço
+
+  final TextEditingController nomeServicoController = TextEditingController();
+  final TextEditingController precoServicoController = TextEditingController();
+  final TextEditingController descricaoServicoController =
+      TextEditingController();
+  final TextEditingController duracaoServicoController =
+      TextEditingController();
 
   final dHelper = DialogHelper();
 
@@ -59,7 +75,13 @@ abstract class _DashboardControllerBase with Store {
   ObservableList<Clientes> clients = ObservableList<Clientes>();
 
   @observable
-  ObservableList<Pet> pets = ObservableList<Pet>();
+  List<Pet> pets = [];
+
+  @observable
+  ObservableList<Agendamento> agendamentos = ObservableList<Agendamento>();
+
+  @observable
+  List<Servico> servico = [];
 
   @observable
   bool isLoading = false;
@@ -71,30 +93,70 @@ abstract class _DashboardControllerBase with Store {
   String errorMessage = '';
   String errorMessagePet = '';
 
+  @observable
+  String? selectedClient = "";
+
+  @observable
+  Pet? selectedPet;
+
+  @observable
+  Servico? selectedServico;
+
+  String? selectedSexo;
+
+  DateTime? selectedDate;
+
+  DateTime? dataNascimento;
+
+  String get currentUserId {
+    final User? user = _firebaseAuth.currentUser;
+    return user?.uid ?? '';
+  }
+
   @action
   Future<void> cadastrarCliente({
     required BuildContext context,
     required String sexo,
+    required DateTime dataNascimento,
   }) async {
-    if (!_validateFields()) return; // Validação dos campos
+    print("Iniciando cadastro de cliente...");
+
+    // Verifique se os campos estão preenchidos corretamente
+    if (!_validateFields()) {
+      print("Validação de campos falhou");
+      return;
+    }
 
     try {
+      final usuarioId = _firebaseAuth.currentUser?.uid;
+      if (usuarioId == null) {
+        throw Exception("Usuário não está logado.");
+      }
+
+      // Log dos valores antes da criação do cliente
+      print(
+          'Nome: ${nomeController.text}, Sexo: $sexo, Data de Nascimento: $dataNascimento');
+
       final cliente = Clientes(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         nome: nomeController.text,
         sexo: sexo,
-        idade: idadeController.text,
+        dataNascimento:
+            dataNascimento, // Certifique-se de que isso está no modelo
         endereco: enderecoController.text,
         numero: numeroController.text,
         bairro: bairroController.text,
         cidade: cidadeController.text,
         telefone: telefoneController.text,
+        userId: usuarioId,
       );
 
-      await firebaseUsecase.addClients(cliente);
+      // Chamada ao Firebase
+      await firebaseUsecase.addClients(cliente, usuarioId);
       print('Cliente cadastrado com sucesso');
       clearFields();
 
+      // Exibe um diálogo de sucesso
       await dHelper.showSuccessDialog(
           context, "Cadastro realizado com sucesso!");
 
@@ -102,6 +164,7 @@ abstract class _DashboardControllerBase with Store {
     } catch (e) {
       print("Erro ao cadastrar cliente: $e");
       errorMessage = e.toString();
+      await dHelper.showErrorDialog(context, errorMessage);
     }
   }
 
@@ -111,14 +174,14 @@ abstract class _DashboardControllerBase with Store {
     errorMessage = '';
 
     try {
+      final userId = currentUserId;
+
       if (query.isEmpty) {
         await fetchClients();
         return;
       }
+      final result = await firebaseUsecase.fetchClients(userId);
 
-      final result = await firebaseUsecase.fetchClients();
-
-      // Filtra os clientes com base na consulta
       clients = ObservableList.of(
         result
             .where((cliente) =>
@@ -144,7 +207,9 @@ abstract class _DashboardControllerBase with Store {
     print('Iniciando fetchClients...');
 
     try {
-      final result = await firebaseUsecase.fetchClients();
+      final userId = currentUserId;
+
+      final result = await firebaseUsecase.fetchClients(userId);
       print('Firestore retornou ${result.length} clientes.');
       clients = ObservableList.of(result);
 
@@ -161,24 +226,29 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
-    @action
+  void setSelectedClient(String clientName) {
+    selectedClient = clientName;
+  }
+
+  @action
   Future<void> searchPets(String query) async {
     isLoadingPet = true;
     errorMessage = '';
 
     try {
+      final userId = currentUserId;
       if (query.isEmpty) {
         await fetchPets();
         return;
       }
 
-      final result = await firebaseUsecase.fetchPets();
+      final result = await firebaseUsecase.fetchPets(userId);
 
       // Filtra os pets com base na consulta
       pets = ObservableList.of(
         result
-            .where((pet) =>
-                pet.nome.toLowerCase().contains(query.toLowerCase()))
+            .where(
+                (pet) => pet.nome.toLowerCase().contains(query.toLowerCase()))
             .toList(),
       );
 
@@ -193,43 +263,30 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
-  //@action
-  //Future<void> fetchPets() async {
-   // isLoadingPet = true;
-   // errorMessagePet = '';
-
-   // try {
-    //  final result = await firebaseUsecase.fetchPets();
-    //  pets = ObservableList.of(result);
-
-    //  if (pets.isEmpty) {
-     //   errorMessagePet = 'Nenhum pet cadastrado.';
-    //  }
-  //  } catch (e) {
-   //   errorMessagePet = e.toString();
- //     print("Erro ao buscar pets: $e");
-  //  } finally {
-   //   isLoadingPet = false;
-   // }
-//  }
+  @action
+  void setSelectedPet(Pet pet) {
+    selectedPet = pet;
+  }
 
   @action
   Future<void> fetchPets() async {
     isLoadingPet = true;
-    errorMessage = '';
+    errorMessagePet = '';
     print('Iniciando fetchPets...');
 
     try {
-      final result = await firebaseUsecase.fetchPets();
+      final userId = currentUserId;
+      final result = await firebaseUsecase.fetchPets(userId);
       print('Firestore retornou ${result.length} pets.');
+
       pets = ObservableList.of(result);
 
       if (pets.isEmpty) {
-        errorMessage = 'Nenhum pet cadastrado.';
+        errorMessagePet = 'Nenhum pet cadastrado para este cliente.';
         print(errorMessage);
       }
     } catch (e) {
-      errorMessage = e.toString();
+      errorMessagePet = e.toString();
       print("Erro ao buscar pets: $e");
     } finally {
       isLoadingPet = false;
@@ -262,7 +319,8 @@ abstract class _DashboardControllerBase with Store {
   @action
   void clearFields() {
     nomeController.clear();
-    idadeController.clear();
+    dataNascimentoController.clear();
+    cepController.clear();
     enderecoController.clear();
     numeroController.clear();
     bairroController.clear();
@@ -278,13 +336,12 @@ abstract class _DashboardControllerBase with Store {
     nascimentoPetController.clear();
     idadePetController.clear();
     pesoPetController.clear();
-    tutorController.clear();
   }
 
   // Método para validar os campos obrigatórios
   bool _validateFields() {
     if (nomeController.text.isEmpty ||
-        idadeController.text.isEmpty ||
+        dataNascimentoController.text.isEmpty ||
         enderecoController.text.isEmpty ||
         numeroController.text.isEmpty ||
         bairroController.text.isEmpty ||
@@ -305,6 +362,7 @@ abstract class _DashboardControllerBase with Store {
     required String raca,
     required String porte,
     required String tutor,
+    required String clienteId,
   }) async {
     if (!_validatePetFields(raca, tipoPet, sexo, porte, tutor)) return;
 
@@ -319,10 +377,10 @@ abstract class _DashboardControllerBase with Store {
         peso: pesoPetController.text,
         sexo: sexo,
         tipo: tipoPet,
-        tutor: tutorController.text,
+        clienteId: clienteId,
       );
 
-      await firebaseUsecase.addPet(pet);
+      await firebaseUsecase.addPet(pet, clienteId);
       print('Pet cadastrado com sucesso');
       clearPetFields();
 
@@ -376,26 +434,6 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
-  // @action
-  // Future<void> deleteClient(String clientId, BuildContext context) async {
-  //   try {
-  //     // Chama a função do use case para excluir o cliente do Firebase
-  //     await firebaseUsecase.deleteClient(clientId);
-  //     print('Cliente excluído com sucesso');
-
-  //     // Atualiza a lista de clientes após a exclusão
-  //     await fetchClients();
-
-  //     // Exibe um diálogo de sucesso
-  //     await dHelper.showSuccessDialog(context, "Cliente excluído com sucesso!");
-  //   } catch (e) {
-  //     print("Erro ao excluir cliente: $e");
-  //     errorMessage = e.toString();
-  //     await dHelper.showErrorDialog(
-  //         context, "Erro ao excluir cliente: $errorMessage");
-  //   }
-  // }
-
   @action
   Future<void> deletePet(String petId) async {
     isLoading = true;
@@ -411,6 +449,174 @@ abstract class _DashboardControllerBase with Store {
       errorMessagePet = e.toString();
       await dHelper.showErrorDialog(
           ctx, "Erro ao excluir pet: $errorMessagePet");
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // Carregar Agendamentos
+  @action
+  Future<void> carregarAgendamentos() async {
+    isLoading = true;
+    try {
+      final fetchedAgendamentos = await firebaseUsecase.fetchAgendamentos();
+
+      if (fetchedAgendamentos.isNotEmpty) {
+        agendamentos.clear();
+        agendamentos.addAll(fetchedAgendamentos);
+      } else {
+        print("Nenhum agendamento encontrado.");
+      }
+    } catch (e) {
+      print("Erro ao carregar agendamentos: $e");
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // Verificar disponibilidade
+  @action
+  Future<bool> verificarDisponibilidade(DateTime dataHora) async {
+    try {
+      final fetchedAgendamentos = await firebaseUsecase.fetchAgendamentos();
+      return fetchedAgendamentos
+          .every((agendamento) => agendamento.dataHora != dataHora);
+    } catch (e) {
+      print("Erro ao verificar disponibilidade: $e");
+      return false;
+    }
+  }
+
+  @action
+  Future<void> salvarAgendamento(
+      Agendamento agendamento, BuildContext context) async {
+    try {
+      // Verifica se já existe um agendamento no mesmo horário
+      bool existeAgendamentoNoMesmoHorario = agendamentos
+          .any((a) => a.dataHora.isAtSameMomentAs(agendamento.dataHora));
+
+      if (existeAgendamentoNoMesmoHorario) {
+        // Exibe o alerta de conflito
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Conflito de Agendamento"),
+            content: const Text("Já existe um agendamento para este horário."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        await firebaseUsecase.addAgendamento(
+          agendamento,
+          agendamento.userId,
+          agendamento.petId,
+        );
+        agendamentos.add(agendamento);
+
+        // Exibe uma mensagem de sucesso
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Sucesso"),
+            content: const Text("Agendamento salvo com sucesso!"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print("Erro ao salvar agendamento: $e");
+
+      // Exibe o alerta de erro
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Erro"),
+          content: Text("Erro ao salvar agendamento: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      throw e;
+    }
+  }
+
+  // Função para excluir agendamento
+  @action
+  Future<void> excluirAgendamento(Agendamento agendamento) async {
+    try {
+      isLoading = true;
+      await firebaseUsecase.deleteAgendamento(agendamento.id!);
+
+      // Remove o agendamento da lista local
+      agendamentos.removeWhere((a) => a.id == agendamento.id);
+    } catch (e) {
+      // Tratar erro, exibir mensagem de erro se necessário
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> fecthServico() async {
+    isLoading = true;
+    errorMessage = '';
+    print('Iniciando fetchServicos...');
+
+    try {
+      final result = await firebaseUsecase.fetchServico();
+      print('Firestore retornou ${result.length} serviços.');
+      servico = ObservableList.of(result);
+
+      if (servico.isEmpty) {
+        errorMessage = 'Nenhum serviço cadastrado.';
+        print(errorMessage);
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      print("Erro ao buscar serviços: $e");
+    } finally {
+      isLoading = false;
+      print('fetchServico concluído. isLoading: $isLoading');
+    }
+  }
+
+  @action
+  Future<void> addServico(Servico servico) async {
+    isLoading = true;
+    try {
+      await firebaseUsecase.addServico(servico);
+    } catch (e) {
+      isLoading = false;
+      print('Erro ao adicionar serviço: $e');
+      rethrow;
+    }
+  }
+
+  @action
+  Future<void> deleteServico(String servicoID) async {
+    isLoading = true;
+    try {
+      await firebaseUsecase.deleteServico(servicoID);
+      print('Serviço deletado com sucesso.');
+
+      await fecthServico();
+    } catch (e) {
+      print('Erro ao deletar serviço: $e');
+      rethrow;
     } finally {
       isLoading = false;
     }

@@ -5,6 +5,7 @@ import 'package:agendamento_pet/core/utils/widget_stateful.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:flutter/services.dart';
 
@@ -91,18 +92,17 @@ class _ClientesScreenState
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Expanded(
-                                  child: buildTextField(
-                                    'Idade:',
-                                    'Idade do cliente',
-                                    controller.idadeController,
-                                    keyboardType: TextInputType.number,
+                                  child: buildDateField(
+                                    'Nascimento:',
+                                    'Data de Nascimento',
+                                    onDateSelected: (date) {
+                                      controller.dataNascimentoController.text =
+                                          "${date.day}/${date.month}/${date.year}";
+                                    },
                                     validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira a idade';
-                                      }
-                                      if (int.tryParse(value) == null) {
-                                        return 'Por favor, insira uma idade válida';
+                                      if (controller.dataNascimentoController
+                                          .text.isEmpty) {
+                                        return 'Por favor, selecione a data de nascimento';
                                       }
                                       return null;
                                     },
@@ -274,9 +274,18 @@ class _ClientesScreenState
                                   onPressed: () async {
                                     if (_formKey.currentState?.validate() ??
                                         false) {
+                                      DateTime? dataNascimento =
+                                          DateFormat('dd/MM/yyyy').parse(
+                                              controller
+                                                  .dataNascimentoController
+                                                  .text,
+                                              true);
+
                                       await controller.cadastrarCliente(
-                                          context: context,
-                                          sexo: sexoSelecionado);
+                                        context: context,
+                                        sexo: sexoSelecionado,
+                                        dataNascimento: dataNascimento,
+                                      );
                                       controller.clearFields();
                                     }
                                   },
@@ -303,6 +312,48 @@ class _ClientesScreenState
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildDateField(String label, String hint,
+      {required Function(DateTime) onDateSelected,
+      String? Function(String?)? validator}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            );
+            if (pickedDate != null) {
+              String formattedDate =
+                  DateFormat('dd/MM/yyyy').format(pickedDate);
+              controller.dataNascimentoController.text = formattedDate;
+              onDateSelected(pickedDate);
+            }
+          },
+          child: AbsorbPointer(
+            child: TextFormField(
+              controller: controller.dataNascimentoController,
+              decoration: InputDecoration(
+                hintText: hint,
+                border: const OutlineInputBorder(),
+                suffixIcon: const Icon(Icons.calendar_today),
+              ),
+              validator: validator,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

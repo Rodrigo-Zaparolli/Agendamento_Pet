@@ -6,6 +6,7 @@ import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
 
 class PetsScreen extends StatefulWidget {
@@ -16,6 +17,15 @@ class PetsScreen extends StatefulWidget {
 }
 
 class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
+  @override
+  void initState() {
+    super.initState();
+
+    controller.fetchClients();
+  }
+
+  List<String> tutores = [];
+
   final _formKey = GlobalKey<FormState>();
 
   String sexoSelecionado = 'Escolha';
@@ -222,6 +232,34 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Expanded(
+                                    child: Observer(
+                                      builder: (_) {
+                                        return buildDropdownField(
+                                          'Tutor:',
+                                          controller.clients.isEmpty
+                                              ? ["Escolha"]
+                                              : controller.clients
+                                                  .map((client) => client.nome)
+                                                  .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              tutorSelecionado =
+                                                  value ?? 'Escolha';
+                                            });
+                                          },
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value == 'Escolha') {
+                                              return 'Por favor, selecione o tutor';
+                                            }
+                                            return null;
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
                                     child: buildTextField(
                                       'Nome:',
                                       'Nome do pet',
@@ -416,8 +454,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       'Idade do Pet (ex: 0,3)',
                                       controller.idadeDecimalPetController,
                                       keyboardType: TextInputType.number,
-                                      readOnly:
-                                          true, // Para que o usuário não possa editar
+                                      readOnly: true,
                                     ),
                                   ),
                                 ],
@@ -441,24 +478,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                       },
                                     ),
                                   ),
-
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: buildTextField(
-                                    'Tutor:',
-                                    'Nome do tutor',
-                                    controller.tutorController,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o nome do tutor';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
 
                               const SizedBox(height: 32),
                               // Botão de Confirmação
@@ -483,6 +504,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                           porte: porteSelecionado,
                                           raca: racaSelecionada,
                                           tutor: tutorSelecionado,
+                                          clienteId: controller.currentUserId,
                                         );
                                         controller.clearFields();
                                       }
@@ -541,8 +563,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
           ),
           keyboardType: keyboardType,
           validator: validator,
-          onChanged: onChanged, // Adiciona o onChanged para o cálculo da idade
-          readOnly: readOnly, // Define se o campo é somente leitura
+          onChanged: onChanged,
+          readOnly: readOnly,
         ),
       ],
     );
