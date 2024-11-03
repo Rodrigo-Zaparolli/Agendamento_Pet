@@ -1,13 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Servico {
-  final String id;
-  final String nome;
-  final double preco;
-  final int duracao;
+  String id;
+  String tipo;
+  String porte;
+  String nome;
+  double preco;
+  int duracao;
 
   Servico({
     required this.id,
+    required this.tipo,
+    required this.porte,
     required this.nome,
     required this.preco,
     required this.duracao,
@@ -16,6 +20,8 @@ class Servico {
   // Converter para JSON para salvar no Firestore
   Map<String, dynamic> toJson() {
     return {
+      'tipo': tipo,
+      'porte': porte,
       'nome': nome,
       'preco': preco,
       'duracao': duracao,
@@ -26,6 +32,8 @@ class Servico {
   factory Servico.fromMap(Map<String, dynamic> data) {
     return Servico(
       id: data['id'] ?? '',
+      tipo: data['tipo'] ?? '',
+      porte: data['porte'] ?? '',
       nome: data['nome'] ?? '',
       preco: (data['preco'] ?? 0).toDouble(),
       duracao: (data['duracao'] ?? 0).toInt(),
@@ -37,6 +45,8 @@ class Servico {
     final data = doc.data() as Map<String, dynamic>;
     return Servico(
       id: doc.id,
+      tipo: data['tipo'],
+      porte: data['porte'],
       nome: data['nome'] ?? '',
       preco: (data['preco'] ?? 0).toDouble(),
       duracao: (data['duracao'] ?? 0).toInt(),

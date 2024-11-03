@@ -12,6 +12,8 @@ class Clientes {
   String endereco;
   String numero;
   String bairro;
+  String uf;
+  String complemento;
   String cidade;
   String telefone;
   String userId;
@@ -24,6 +26,8 @@ class Clientes {
     required this.endereco,
     required this.numero,
     required this.bairro,
+    required this.uf,
+    required this.complemento,
     required this.cidade,
     required this.telefone,
     required this.userId,
@@ -46,6 +50,8 @@ class Clientes {
       endereco: data['endereco'] ?? '',
       numero: data['numero'] ?? '',
       bairro: data['bairro'] ?? '',
+      uf: data['uf'] ?? '',
+      complemento: data['complemento'] ?? '',
       cidade: data['cidade'] ?? '',
       telefone: data['telefone'] ?? '',
       userId: data['userId'] ?? '',

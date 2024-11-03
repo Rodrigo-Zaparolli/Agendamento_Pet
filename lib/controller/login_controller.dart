@@ -31,6 +31,7 @@ abstract class _LoginControllerBase with Store {
   final ctrlSenha = TextEditingController();
   final ctrlEmail = TextEditingController();
   final ctrlPhone = TextEditingController();
+  final ctrlRole = TextEditingController();
 
   // Chaves
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -77,8 +78,16 @@ abstract class _LoginControllerBase with Store {
   final maskTextInputFormatter = MaskTextInputFormatter(
       mask: "(##) #####-####", filter: {"#": RegExp(r'[0-9]')});
 
-  // Validators
+  @action
+  initState() async {
+    try {
+      _loading = true;
+    } finally {
+      _loading = false;
+    }
+  }
 
+  // Validators
   @action
   String? validateName(String? val) {
     if (val == null || val.isEmpty) {
@@ -147,11 +156,19 @@ abstract class _LoginControllerBase with Store {
 
       final userDetails =
           await _firebaseUsecase.getUserDetails(userCredential.user!.uid);
-      ctrlNome.text = userDetails?.name ?? '';
-      ctrlEmail.text = userDetails?.email ?? '';
 
-      await saveCampos();
-      Navigator.of(context).pushNamed("/home");
+      if (userDetails != null) {
+        ctrlNome.text = userDetails.name;
+        ctrlEmail.text = userDetails.email;
+        ctrlRole.text = userDetails.role;
+
+        Navigator.of(context).pushNamed("/home");
+
+        await saveCampos();
+      } else {
+        throw FirebaseAuthException(
+            code: 'user-not-found', message: 'Usuário não encontrado');
+      }
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
 
@@ -188,7 +205,8 @@ abstract class _LoginControllerBase with Store {
           phone: ctrlPhone.text,
           cep: "",
           state: "",
-          city: "");
+          city: "",
+          role: "");
 
       await _firebaseUsecase.registerUser(usuario);
 
@@ -216,6 +234,14 @@ abstract class _LoginControllerBase with Store {
     await sHandler.savePreferences("name", ctrlNome.text.trim());
     await sHandler.savePreferences("mail", ctrlEmail.text.trim());
     await sHandler.savePreferences("password", ctrlSenha.text.trim());
+    await sHandler.savePreferences("role", ctrlRole.text.trim());
+  }
+
+  setaCampos() async {
+    ctrlNome.text = await sHandler.readPreferences("name");
+    ctrlEmail.text = await sHandler.readPreferences("mail");
+    ctrlSenha.text = await sHandler.readPreferences("password");
+    ctrlRole.text = await sHandler.readPreferences("role");
   }
 
   // Função para redefinir a senha

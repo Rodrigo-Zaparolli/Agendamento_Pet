@@ -2,7 +2,6 @@
 
 // ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api
 
-import 'package:agendamento_pet/constants/app_constanst.dart';
 import 'package:agendamento_pet/constants/dialog_helper.dart';
 import 'package:agendamento_pet/domain/model/agendamento.dart';
 import 'package:agendamento_pet/domain/model/clientes.dart';
@@ -40,6 +39,7 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController numeroController = TextEditingController();
   final TextEditingController bairroController = TextEditingController();
   final TextEditingController cidadeController = TextEditingController();
+  final TextEditingController complementoController = TextEditingController();
   final TextEditingController estadoController = TextEditingController();
   final TextEditingController telefoneController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
@@ -56,10 +56,12 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController idadeDecimalPetController =
       TextEditingController();
   final TextEditingController dataController = TextEditingController();
+  final TextEditingController tutorPetController = TextEditingController();
 
 // Controladores para os campos de texto Serviço
-
   final TextEditingController nomeServicoController = TextEditingController();
+  final TextEditingController tipoServicoController = TextEditingController();
+  final TextEditingController porteServicoController = TextEditingController();
   final TextEditingController precoServicoController = TextEditingController();
   final TextEditingController descricaoServicoController =
       TextEditingController();
@@ -84,10 +86,16 @@ abstract class _DashboardControllerBase with Store {
   List<Servico> servico = [];
 
   @observable
+  List<String> availableTimeSlots = [];
+
+  @observable
   bool isLoading = false;
 
   @observable
   bool isLoadingPet = false;
+
+  @observable
+  bool isTimeSlotEnabled = true;
 
   @observable
   String errorMessage = '';
@@ -102,11 +110,38 @@ abstract class _DashboardControllerBase with Store {
   @observable
   Servico? selectedServico;
 
+  @observable
+  String? selectedTimeSlot;
+
+  @observable
+  int agendamentosDia = 0;
+
+  @observable
+  int agendamentosMes = 0;
+
   String? selectedSexo;
 
   DateTime? selectedDate;
 
   DateTime? dataNascimento;
+
+  List<String> occupiedSlots = [];
+
+  final List<String> timeSlots = [
+    '08:00',
+    '09:00',
+    '10:00',
+    '11:00',
+    '13:30',
+    '14:30',
+    '15:30',
+    '16:30',
+    '17:30',
+    '18:30',
+  ];
+
+  List<String> slotsDisponiveis = [];
+  List<String> horariosOcupados = [];
 
   String get currentUserId {
     final User? user = _firebaseAuth.currentUser;
@@ -133,7 +168,6 @@ abstract class _DashboardControllerBase with Store {
         throw Exception("Usuário não está logado.");
       }
 
-      // Log dos valores antes da criação do cliente
       print(
           'Nome: ${nomeController.text}, Sexo: $sexo, Data de Nascimento: $dataNascimento');
 
@@ -141,18 +175,19 @@ abstract class _DashboardControllerBase with Store {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         nome: nomeController.text,
         sexo: sexo,
-        dataNascimento:
-            dataNascimento, // Certifique-se de que isso está no modelo
+        dataNascimento: dataNascimento,
         endereco: enderecoController.text,
         numero: numeroController.text,
         bairro: bairroController.text,
+        uf: estadoController.text,
+        complemento: complementoController.text,
         cidade: cidadeController.text,
         telefone: telefoneController.text,
         userId: usuarioId,
       );
 
       // Chamada ao Firebase
-      await firebaseUsecase.addClients(cliente, usuarioId);
+      await firebaseUsecase.addClient(cliente, usuarioId);
       print('Cliente cadastrado com sucesso');
       clearFields();
 
@@ -231,6 +266,18 @@ abstract class _DashboardControllerBase with Store {
   }
 
   @action
+  Future<void> deleteClients(Clientes clientes, String userId) async {
+    try {
+      isLoading = true;
+      await firebaseUsecase.deleteClient(clientes, userId);
+
+      await fetchClients();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
   Future<void> searchPets(String query) async {
     isLoadingPet = true;
     errorMessage = '';
@@ -283,7 +330,7 @@ abstract class _DashboardControllerBase with Store {
 
       if (pets.isEmpty) {
         errorMessagePet = 'Nenhum pet cadastrado para este cliente.';
-        print(errorMessage);
+        print(errorMessagePet);
       }
     } catch (e) {
       errorMessagePet = e.toString();
@@ -291,6 +338,17 @@ abstract class _DashboardControllerBase with Store {
     } finally {
       isLoadingPet = false;
       print('fetchPets concluído. isLoadingPet: $isLoadingPet');
+    }
+  }
+
+  @action
+  Future<void> deletePets(Pet pet) async {
+    try {
+      isLoadingPet = true;
+      await firebaseUsecase.deletePet(pet);
+      await fetchPets();
+    } finally {
+      isLoadingPet = false;
     }
   }
 
@@ -331,6 +389,7 @@ abstract class _DashboardControllerBase with Store {
   @action
   void clearPetFields() {
     nomePetController.clear();
+
     racaPetController.clear();
     portePetController.clear();
     nascimentoPetController.clear();
@@ -362,13 +421,17 @@ abstract class _DashboardControllerBase with Store {
     required String raca,
     required String porte,
     required String tutor,
-    required String clienteId,
   }) async {
     if (!_validatePetFields(raca, tipoPet, sexo, porte, tutor)) return;
 
     try {
+      final usuarioId = _firebaseAuth.currentUser?.uid;
+      if (usuarioId == null) {
+        throw Exception("Usuário não está logado.");
+      }
+
       final pet = Pet(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        clientId: usuarioId,
         nome: nomePetController.text,
         raca: raca,
         porte: porte,
@@ -377,16 +440,17 @@ abstract class _DashboardControllerBase with Store {
         peso: pesoPetController.text,
         sexo: sexo,
         tipo: tipoPet,
-        clienteId: clienteId,
+        tutor: tutor,
       );
 
-      await firebaseUsecase.addPet(pet, clienteId);
-      print('Pet cadastrado com sucesso');
+      await firebaseUsecase.addPet(pet, usuarioId);
+
+      print('Pet cadastrado com sucesso, ID do cliente: $usuarioId');
       clearPetFields();
 
-      // Exibe um diálogo de sucesso
       await dHelper.showSuccessDialog(
           context, "Cadastro do pet realizado com sucesso!");
+      await fetchPets();
     } catch (e) {
       print("Erro ao cadastrar pet: $e");
       errorMessage = e.toString();
@@ -414,14 +478,11 @@ abstract class _DashboardControllerBase with Store {
   @action
   int calcularIdade(String dataNascimento) {
     try {
-      // Converte a string da data de nascimento para um objeto DateTime
       DateTime nascimento = DateFormat('dd/MM/yyyy').parse(dataNascimento);
       DateTime agora = DateTime.now();
 
-      // Calcula a diferença em anos
       int idade = agora.year - nascimento.year;
 
-      // Ajusta se o aniversário ainda não ocorreu neste ano
       if (agora.month < nascimento.month ||
           (agora.month == nascimento.month && agora.day < nascimento.day)) {
         idade--;
@@ -430,72 +491,121 @@ abstract class _DashboardControllerBase with Store {
       return idade;
     } catch (e) {
       print("Erro ao calcular a idade: $e");
-      return 0; // Retorna 0 ou uma outra lógica de erro, conforme necessário
-    }
-  }
-
-  @action
-  Future<void> deletePet(String petId) async {
-    isLoading = true;
-    try {
-      await firebaseUsecase.deletePet(petId);
-      print('Pet excluído com sucesso');
-
-      await fetchPets();
-
-      await dHelper.showSuccessDialog(ctx, "Pet excluído com sucesso!");
-    } catch (e) {
-      print("Erro ao excluir pet: $e");
-      errorMessagePet = e.toString();
-      await dHelper.showErrorDialog(
-          ctx, "Erro ao excluir pet: $errorMessagePet");
-    } finally {
-      isLoading = false;
+      return 0;
     }
   }
 
   // Carregar Agendamentos
   @action
   Future<void> carregarAgendamentos() async {
-    isLoading = true;
-    try {
-      final fetchedAgendamentos = await firebaseUsecase.fetchAgendamentos();
+    List<Agendamento> fetchedAgendamentos =
+        await firebaseUsecase.fetchAgendamentos();
 
-      if (fetchedAgendamentos.isNotEmpty) {
-        agendamentos.clear();
-        agendamentos.addAll(fetchedAgendamentos);
-      } else {
-        print("Nenhum agendamento encontrado.");
-      }
-    } catch (e) {
-      print("Erro ao carregar agendamentos: $e");
-    } finally {
-      isLoading = false;
-    }
+    agendamentos = ObservableList<Agendamento>.of(fetchedAgendamentos);
+
+    // Atualizar contagens
+    agendamentosDia = agendamentos.where((a) => isToday(a.data)).length;
+    agendamentosMes = agendamentos.where((a) => isThisMonth(a.data)).length;
   }
 
-  // Verificar disponibilidade
+  bool isToday(DateTime date) {
+    final today = DateTime.now();
+    return date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+  }
+
+  bool isThisMonth(DateTime date) {
+    final today = DateTime.now();
+    return date.year == today.year && date.month == today.month;
+  }
+
   @action
-  Future<bool> verificarDisponibilidade(DateTime dataHora) async {
-    try {
-      final fetchedAgendamentos = await firebaseUsecase.fetchAgendamentos();
-      return fetchedAgendamentos
-          .every((agendamento) => agendamento.dataHora != dataHora);
-    } catch (e) {
-      print("Erro ao verificar disponibilidade: $e");
-      return false;
+  List<String> getAvailableTimeSlots(DateTime selectedDate) {
+    // Filtra os agendamentos do dia selecionado
+    final agendamentosDoDia = agendamentos
+        .where((a) =>
+            DateFormat('dd/MM/yyyy').format(a.data) ==
+            DateFormat('dd/MM/yyyy').format(selectedDate))
+        .toList();
+
+    List<String> availableSlots = [];
+
+    // Loop pelas horas disponíveis (exceto 12h)
+    for (int hour = 8; hour < 18; hour++) {
+      if (hour == 12) continue; // Ignora o horário de 12h
+
+      String currentHour = '$hour:00';
+      String nextHour = '${hour + 1}:00';
+
+      // Verifica se o horário atual ou o próximo estão ocupados
+      bool isOccupied = agendamentosDoDia.any((agendamento) {
+        return agendamento.hora == currentHour ||
+            agendamento.hora == nextHour ||
+            agendamento.horariosOcupados.contains(currentHour) ||
+            agendamento.horariosOcupados.contains(nextHour);
+      });
+
+      if (!isOccupied) {
+        availableSlots.add(currentHour);
+      }
     }
+
+    // Remove horários baseados na duração do serviço
+    if (selectedServico?.duracao == 120) {
+      availableSlots.removeWhere((slot) {
+        final hourPart = int.parse(slot.split(':')[0]);
+        return slot == '$hourPart:00' ||
+            (hourPart < 17 && slot == '${hourPart + 1}:00');
+      });
+    } else if (selectedServico?.duracao == 60) {
+      availableSlots
+          .removeWhere((slot) => slot == '${selectedServico?.duracao}');
+    }
+
+    return availableSlots;
   }
 
   @action
   Future<void> salvarAgendamento(
       Agendamento agendamento, BuildContext context) async {
     try {
-      // Verifica se já existe um agendamento no mesmo horário
-      bool existeAgendamentoNoMesmoHorario = agendamentos
-          .any((a) => a.dataHora.isAtSameMomentAs(agendamento.dataHora));
+      // Busca os agendamentos existentes (de todos os usuários)
+      final agendamentosExistentes = await firebaseUsecase.fetchAgendamentos();
 
-      if (existeAgendamentoNoMesmoHorario) {
+      // Formata a hora do agendamento para ter sempre dois dígitos
+      String formattedHoraAgendamento = agendamento.hora.padLeft(5, '0');
+      DateTime horaAgendamento =
+          DateTime.parse('1970-01-01 $formattedHoraAgendamento');
+
+      // Verifica se já existe um agendamento no mesmo horário
+      bool existeAgendamentoNoMesmoHorario = agendamentosExistentes.any((a) {
+        String formattedHoraExistente = a.hora.padLeft(5, '0');
+        DateTime horaExistente =
+            DateTime.parse('1970-01-01 $formattedHoraExistente');
+
+        // Verifica se é o mesmo dia e se o horário existe
+        if (a.data.isSameDay(agendamento.data)) {
+          if (a.servico.duracao == 120) {
+            // Se o serviço tem duração de 120 minutos, verifica as duas horas
+            return horaExistente.hour == horaAgendamento.hour ||
+                horaExistente.hour == horaAgendamento.hour + 1;
+          } else {
+            // Para outros serviços, apenas verifica a hora
+            return horaExistente.hour == horaAgendamento.hour;
+          }
+        }
+        return false;
+      });
+
+      // Verifica a lista de horários ocupados do modelo
+      bool existeHorarioOcupado = agendamentosExistentes.any((a) {
+        return a.horariosOcupados.contains(formattedHoraAgendamento) ||
+            (agendamento.servico.duracao == 120 &&
+                a.horariosOcupados.contains('${horaAgendamento.hour + 1}:00'));
+      });
+
+      if (existeAgendamentoNoMesmoHorario || existeHorarioOcupado) {
         // Exibe o alerta de conflito
         showDialog(
           context: context,
@@ -506,31 +616,44 @@ abstract class _DashboardControllerBase with Store {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text("OK"),
-              ),
+              )
             ],
           ),
         );
       } else {
+        // Gera o ID do agendamento usando o timestamp atual
+        agendamento.id = DateTime.now().millisecondsSinceEpoch.toString();
+
+        // Adiciona o horário ocupado à lista do agendamento
+        if (agendamento.servico.duracao == 120) {
+          agendamento.horariosOcupados.add(formattedHoraAgendamento);
+          agendamento.horariosOcupados.add(
+              '${horaAgendamento.hour + 1}:00'); // Adiciona o próximo horário
+        } else {
+          agendamento.horariosOcupados.add(formattedHoraAgendamento);
+        }
+
         await firebaseUsecase.addAgendamento(
           agendamento,
           agendamento.userId,
           agendamento.petId,
         );
-        agendamentos.add(agendamento);
 
-        // Exibe uma mensagem de sucesso
+        // Adiciona o novo agendamento à lista local
+        agendamentos.add(agendamento);
+        clearPetFields();
+
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text("Sucesso"),
-            content: const Text("Agendamento salvo com sucesso!"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("OK"),
-              ),
-            ],
-          ),
+              title: const Text("Sucesso"),
+              content: const Text("Agendamento salvo com sucesso!"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("OK"),
+                )
+              ]),
         );
       }
     } catch (e) {
@@ -546,11 +669,11 @@ abstract class _DashboardControllerBase with Store {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text("OK"),
-            ),
+            )
           ],
         ),
       );
-      throw e;
+      rethrow;
     }
   }
 
@@ -561,10 +684,7 @@ abstract class _DashboardControllerBase with Store {
       isLoading = true;
       await firebaseUsecase.deleteAgendamento(agendamento.id!);
 
-      // Remove o agendamento da lista local
       agendamentos.removeWhere((a) => a.id == agendamento.id);
-    } catch (e) {
-      // Tratar erro, exibir mensagem de erro se necessário
     } finally {
       isLoading = false;
     }
@@ -577,7 +697,7 @@ abstract class _DashboardControllerBase with Store {
     print('Iniciando fetchServicos...');
 
     try {
-      final result = await firebaseUsecase.fetchServico();
+      final result = await firebaseUsecase.fetchServicos();
       print('Firestore retornou ${result.length} serviços.');
       servico = ObservableList.of(result);
 
@@ -617,6 +737,71 @@ abstract class _DashboardControllerBase with Store {
     } catch (e) {
       print('Erro ao deletar serviço: $e');
       rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> updateServico(String servicoId, Servico servico) async {
+    isLoading = true;
+    try {
+      await firebaseUsecase.updateServico(servicoId, servico);
+      print('Serviço atualizado com sucesso.');
+
+      await fecthServico();
+    } catch (e) {
+      print('Erro ao atualizar serviço: $e');
+      rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  List<Servico> getServicosPorPorte(Pet? petSelecionado) {
+    if (petSelecionado == null) return [];
+
+    return servico
+        .where((servico) => servico.porte == petSelecionado.porte)
+        .toList();
+  }
+
+  @action
+  @action
+  Future<void> searchServices(String query) async {
+    isLoading = true;
+    errorMessage = '';
+
+    try {
+      if (query.isEmpty) {
+        // Recarrega todos os serviços e atualiza a lista servico
+        final allServices = await firebaseUsecase.fetchServicos();
+        servico = ObservableList.of(allServices);
+        return;
+      }
+
+      // Filtra os serviços com base na query
+      final result = await firebaseUsecase.fetchServicos();
+
+      servico = ObservableList.of(
+        result.where((servico) {
+          final nomeMatch =
+              servico.nome.toLowerCase().contains(query.toLowerCase());
+          final tipoMatch =
+              servico.tipo.toLowerCase().contains(query.toLowerCase());
+          final porteMatch =
+              servico.porte.toLowerCase().contains(query.toLowerCase());
+
+          return nomeMatch || tipoMatch || porteMatch;
+        }).toList(),
+      );
+
+      if (servico.isEmpty) {
+        errorMessage = 'Nenhum serviço encontrado para "$query".';
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      print("Erro ao buscar serviços: $e");
     } finally {
       isLoading = false;
     }

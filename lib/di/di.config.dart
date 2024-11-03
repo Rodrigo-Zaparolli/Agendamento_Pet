@@ -9,6 +9,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:agendamento_pet/controller/dashboard_controller.dart' as _i75;
+import 'package:agendamento_pet/controller/home_controller.dart' as _i257;
 import 'package:agendamento_pet/controller/login_controller.dart' as _i32;
 import 'package:agendamento_pet/data/repository/busca_cep_repository.dart'
     as _i29;
@@ -45,6 +46,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i59.FirebaseAuth>(() => firebaseModule.auth);
     gh.factory<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.factory<_i361.BaseOptions>(() => dioDi.options);
+    gh.factory<_i257.HomeController>(() => _i257.HomeController());
     gh.lazySingleton<_i361.Dio>(() => dioDi.dio());
     gh.factory<_i29.BuscaCepRepository>(
         () => _i29.BuscaCepRepositoryImpl(gh<_i361.Dio>()));

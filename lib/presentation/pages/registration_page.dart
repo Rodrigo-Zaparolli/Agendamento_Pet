@@ -171,13 +171,6 @@ class _RegistrationPageState
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Container(
-                          padding: const EdgeInsets.only(bottom: 5.0),
-                          child: Text(
-                            "Número de Telefone",
-                            style: normalFont(MColors.textGrey, null),
-                          ),
-                        ),
                         const SizedBox(height: 20.0),
                         controller.isButtonDisabled == true
                             ? CustomButtomWidget(

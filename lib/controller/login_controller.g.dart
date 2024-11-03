@@ -201,6 +201,14 @@ mixin _$LoginController on _LoginControllerBase, Store {
     });
   }
 
+  late final _$initStateAsyncAction =
+      AsyncAction('_LoginControllerBase.initState', context: context);
+
+  @override
+  Future initState() {
+    return _$initStateAsyncAction.run(() => super.initState());
+  }
+
   late final _$signInAsyncAction =
       AsyncAction('_LoginControllerBase.signIn', context: context);
 

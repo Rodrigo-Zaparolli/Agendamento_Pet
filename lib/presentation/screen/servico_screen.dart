@@ -30,6 +30,123 @@ class _ServicosScreenState
     super.initState();
   }
 
+  List<String> racasSelecionadas = [];
+  String tipoPetSelecionado = 'Escolha';
+  String tipoPorteSelecionado = 'Escolha';
+  String racaSelecionada = 'Escolha';
+  String porteSelecionado = 'Escolha';
+
+  final Map<String, List<String>> porte = {
+    'Cão': [
+      'Pequeno',
+      'Médio',
+      'Grande',
+    ],
+    'Gato': [
+      'Pequeno, de 2 a 4 kg',
+      'Médio, de 4 a 6 kg',
+      'Grande, acima de 6 kg',
+    ],
+  };
+
+  final Map<String, List<String>> portePequeno = {
+    'Cão': [
+      'Affenpinscher',
+      'Bichon Frisé',
+      'Boston Terrier',
+      'Cavalier King Charles Spaniel',
+      'Chihuahua',
+      'Cocker Spaniel Americano',
+      'Dachshund (Teckel)',
+      'Jack Russell Terrier',
+      'Lhasa Apso',
+      'Maltês',
+      'Papillon',
+      'Pekingese',
+      'Pomeranian (Spitz Alemão Anão)',
+      'Poodle Toy',
+      'Pug',
+      'Shih Tzu',
+      'Silky Terrier',
+      'Welsh Corgi Pembroke',
+      'West Highland White Terrier',
+      'Yorkshire Terrier',
+    ],
+    'Gato': [
+      'Singapura',
+      'Cornish Rex',
+      'Munchkin',
+      'Devon Rex',
+      'Sphynx',
+    ],
+  };
+
+  final Map<String, List<String>> porteMedio = {
+    'Cão': [
+      'American Staffordshire Terrier',
+      'Australian Shepherd',
+      'Basenji',
+      'Beagle',
+      'Border Collie',
+      'Bull Terrier',
+      'Bulldog Francês',
+      'Bulldog Inglês',
+      'Cocker Spaniel Inglês',
+      'Dálmata',
+      'Poodle Médio',
+      'Schnauzer Miniatura',
+      'Staffordshire Bull Terrier',
+      'Shiba Inu',
+      'Shetland Sheepdog',
+      'Shar-Pei',
+      'Whippet',
+      'Wheaten Terrier',
+    ],
+    'Gato': [
+      'Siamês',
+      'Abyssinian',
+      'Birmanês',
+      'American Shorthair',
+      'British Shorthair',
+      'Persa',
+      'Scottish Fold',
+    ],
+  };
+
+  final Map<String, List<String>> porteGrande = {
+    'Cão': [
+      'Akita Inu',
+      'Bernese Mountain Dog',
+      'Boxer',
+      'Bullmastiff',
+      'Cane Corso',
+      'Collie',
+      'Dogue Alemão',
+      'Fila Brasileiro',
+      'Golden Retriever',
+      'Dálmata',
+      'Golden Retriever',
+      'Labrador Retriever',
+      'Mastiff',
+      'Pastor Alemão',
+      'Pastor Belga',
+      'Rottweiler',
+      'Samoyed',
+      'São Bernardo',
+      'Siberian Husky',
+      'Terra Nova (Newfoundland)',
+      'Weimaraner',
+      'Wolfhound Irlandês',
+    ],
+    'Gato': [
+      'Maine Coon',
+      'Ragdoll',
+      'BirmNorueguês da Florestaanês',
+      'Savannah',
+      'Siberiano',
+    ],
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +164,7 @@ class _ServicosScreenState
 
   Widget _buildServicoListSection() {
     return Expanded(
-      flex: 1,
+      flex: 3,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
@@ -70,6 +187,19 @@ class _ServicosScreenState
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar Serviço',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    controller.searchServices(value);
+                  },
                 ),
                 const SizedBox(height: 16),
                 Observer(
@@ -102,19 +232,32 @@ class _ServicosScreenState
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text('Preço: R\$ ${servico.preco}'),
+                                Text('Duração: ${servico.duracao} min.'),
                                 Text(
-                                  'Preço: R\$ ${servico.preco}',
-                                ),
+                                    'Tipo: ${servico.tipo}'), // Exibe o tipo do serviço
                                 Text(
-                                  'Duração: ${servico.duracao} min.',
-                                ),
+                                    'Porte: ${servico.porte}'), // Exibe o porte do serviço
                               ],
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                _confirmarExclusao(context, servico);
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blue),
+                                  onPressed: () {
+                                    _showEditDialog(context, servico);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () {
+                                    _confirmarExclusao(context, servico);
+                                  },
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -180,6 +323,73 @@ class _ServicosScreenState
   Widget _buildServiceFormFields() {
     return Column(
       children: [
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: buildDropdownField(
+                'Tipo de Pet:',
+                ['Escolha', 'Cão', 'Gato'],
+                onChanged: (value) {
+                  setState(() {
+                    tipoPetSelecionado = value ?? 'Escolha';
+                    porteSelecionado = 'Escolha';
+                    racasSelecionadas = [];
+                    racaSelecionada = 'Escolha';
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value == 'Escolha') {
+                    return 'Por favor, selecione o tipo de pet';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: buildDropdownField(
+                'Porte:',
+                tipoPetSelecionado == 'Escolha'
+                    ? ['Escolha']
+                    : porte[tipoPetSelecionado] ?? ['Escolha'],
+                onChanged: (value) {
+                  setState(() {
+                    porteSelecionado = value ?? 'Escolha';
+                    racasSelecionadas = [];
+                    racaSelecionada = 'Escolha';
+
+                    if (tipoPetSelecionado == 'Cão') {
+                      if (porteSelecionado == 'Pequeno') {
+                        racasSelecionadas = portePequeno['Cão'] ?? [];
+                      } else if (porteSelecionado == 'Médio') {
+                        racasSelecionadas = porteMedio['Cão'] ?? [];
+                      } else if (porteSelecionado == 'Grande') {
+                        racasSelecionadas = porteGrande['Cão'] ?? [];
+                      }
+                    } else if (tipoPetSelecionado == 'Gato') {
+                      if (porteSelecionado == 'Pequeno, de 2 a 4 kg') {
+                        racasSelecionadas = portePequeno['Gato'] ?? [];
+                      } else if (porteSelecionado == 'Médio, de 4 a 6 kg') {
+                        racasSelecionadas = porteMedio['Gato'] ?? [];
+                      } else if (porteSelecionado == 'Grande, acima de 6 kg') {
+                        racasSelecionadas = porteGrande['Gato'] ?? [];
+                      }
+                    }
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value == 'Escolha') {
+                    return 'Por favor, selecione o porte';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
         buildTextField(
             'Nome do Serviço:', 'Nome', controller.nomeServicoController),
         const SizedBox(height: 10),
@@ -188,6 +398,38 @@ class _ServicosScreenState
         buildTextField('Duração do Serviço:', 'Duração',
             controller.duracaoServicoController,
             isNumber: true),
+      ],
+    );
+  }
+
+  Widget buildDropdownField(
+    String label,
+    List<String> options, {
+    String? Function(String?)? validator,
+    void Function(String?)? onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+          value: options.contains('Escolha') ? 'Escolha' : null,
+          items: options
+              .map((option) => DropdownMenuItem<String>(
+                    value: option,
+                    child: Text(option),
+                  ))
+              .toList(),
+          onChanged: onChanged,
+          validator: validator,
+        ),
       ],
     );
   }
@@ -237,7 +479,9 @@ class _ServicosScreenState
   }
 
   Future<void> _confirmarCadastro(BuildContext context) async {
-    if (controller.nomeServicoController.text.isEmpty ||
+    if (tipoPetSelecionado.isEmpty ||
+        porteSelecionado.isEmpty ||
+        controller.nomeServicoController.text.isEmpty ||
         precoController.numberValue <= 0 ||
         controller.duracaoServicoController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -248,6 +492,8 @@ class _ServicosScreenState
 
     final servico = Servico(
       id: "",
+      tipo: tipoPetSelecionado,
+      porte: porteSelecionado,
       nome: controller.nomeServicoController.text,
       preco: precoController.numberValue,
       duracao: int.parse(controller.duracaoServicoController.text),
@@ -258,6 +504,8 @@ class _ServicosScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Serviço adicionado com sucesso!')),
       );
+      controller.tipoServicoController.clear();
+      controller.porteServicoController.clear();
       controller.nomeServicoController.clear();
       precoController.clear();
       controller.duracaoServicoController.clear();
@@ -290,6 +538,79 @@ class _ServicosScreenState
                 Navigator.of(context).pop();
                 await controller.deleteServico(servico.id);
               },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Servico servico) {
+    final TextEditingController tipoController =
+        TextEditingController(text: servico.tipo);
+    final TextEditingController porteController =
+        TextEditingController(text: servico.porte);
+    final TextEditingController nomeController =
+        TextEditingController(text: servico.nome);
+    final TextEditingController precoController =
+        TextEditingController(text: servico.preco.toString());
+    final TextEditingController duracaoController =
+        TextEditingController(text: servico.duracao.toString());
+
+    //Editar o serviço
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Editar Serviço'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: tipoController,
+                decoration: const InputDecoration(labelText: 'Escolha o tipo'),
+              ),
+              TextField(
+                controller: porteController,
+                decoration:
+                    const InputDecoration(labelText: 'Escolha o porte do Pet'),
+              ),
+              TextField(
+                controller: nomeController,
+                decoration: const InputDecoration(labelText: 'Nome do Serviço'),
+              ),
+              TextField(
+                controller: precoController,
+                decoration: const InputDecoration(labelText: 'Preço'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: duracaoController,
+                decoration: const InputDecoration(labelText: 'Duração (min)'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                servico.nome = nomeController.text;
+                servico.preco =
+                    double.tryParse(precoController.text) ?? servico.preco;
+                servico.duracao =
+                    int.tryParse(duracaoController.text) ?? servico.duracao;
+
+                controller.updateServico(servico.id, servico);
+
+                Navigator.pop(context);
+              },
+              child: const Text('Salvar'),
             ),
           ],
         );

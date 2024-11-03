@@ -13,23 +13,25 @@ abstract class FirebaseUsecase {
   Future<Usuario?> getUserDetails(String userId);
   Future<void> updateUserDetails(Usuario usuario);
   Future<List<Clientes>> fetchClients(String userId);
-  Future<void> addClients(Clientes client, String userId);
+  Future<void> addClient(Clientes client, String userId);
+  Future<void> deleteClient(Clientes client, String userId);
 
   // Pets
-  Future<void> addPet(Pet pet, String clientId);
-  Future<List<Pet>> fetchPets(String clienteId);
-  Future<void> deletePet(String petId);
+  Future<void> addPet(Pet pet, String userId);
+  Future<List<Pet>> fetchPets(String clientId);
+  Future<void> deletePet(Pet pet);
 
-  // Agendamento
+  // Agendamentos
   Future<void> addAgendamento(
       Agendamento agendamento, String petId, String userId);
   Future<List<Agendamento>> fetchAgendamentos();
   Future<void> deleteAgendamento(String agendamentoId);
 
-  //Servico
+  // Serviços
   Future<void> addServico(Servico servico);
-  Future<List<Servico>> fetchServico();
+  Future<List<Servico>> fetchServicos();
   Future<void> deleteServico(String servicoId);
+  Future<void> updateServico(String servicoId, Servico servico);
 }
 
 @Injectable(as: FirebaseUsecase)
@@ -78,16 +80,25 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   @override
   Future<List<Clientes>> fetchClients(String userId) async {
     try {
-      return await firestoreRepository.fetchClients(userId);
+      return await firestoreRepository.fetchClients();
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> addClients(Clientes client, String userId) async {
+  Future<void> addClient(Clientes client, String userId) async {
     try {
-      await firestoreRepository.addClients(client, userId);
+      await firestoreRepository.addClients(client);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteClient(Clientes client, String userId) async {
+    try {
+      await firestoreRepository.deleteClients(client);
     } catch (e) {
       rethrow;
     }
@@ -95,38 +106,38 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
 
   // Pets
   @override
-  Future<void> addPet(Pet pet, String clientId) async {
+  Future<void> addPet(Pet pet, String userId) async {
     try {
-      await firestoreRepository.addPet(pet, clientId);
+      await firestoreRepository.addPets(pet);
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<List<Pet>> fetchPets(String clienteId) async {
+  Future<List<Pet>> fetchPets(String clientId) async {
     try {
-      return await firestoreRepository.fetchPets(clienteId);
+      return await firestoreRepository.fetchPets(clientId);
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> deletePet(String petId) async {
+  Future<void> deletePet(Pet pet) async {
     try {
-      await firestoreRepository.deletePet(petId);
+      await firestoreRepository.deletePets(pet);
     } catch (e) {
       rethrow;
     }
   }
 
-  // Agendamento
+  // Agendamentos
   @override
   Future<void> addAgendamento(
       Agendamento agendamento, String petId, String userId) async {
     try {
-      await firestoreRepository.addAgendamento(agendamento, petId, userId);
+      await firestoreRepository.addAgendamento(agendamento, petId);
     } catch (e) {
       rethrow;
     }
@@ -150,10 +161,20 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
     }
   }
 
+  // Serviços
   @override
   Future<void> addServico(Servico servico) async {
     try {
       await firestoreRepository.addServico(servico);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Servico>> fetchServicos() async {
+    try {
+      return await firestoreRepository.fetchServico();
     } catch (e) {
       rethrow;
     }
@@ -169,9 +190,9 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Servico>> fetchServico() async {
+  Future<void> updateServico(String servicoId, Servico servico) async {
     try {
-      return await firestoreRepository.fetchServico();
+      await firestoreRepository.updateServico(servicoId, servico);
     } catch (e) {
       rethrow;
     }

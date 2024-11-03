@@ -2,9 +2,12 @@ import 'package:agendamento_pet/controller/dashboard_controller.dart';
 import 'package:agendamento_pet/core/utils/all_widgets.dart';
 import 'package:agendamento_pet/core/utils/colors.dart';
 import 'package:agendamento_pet/core/utils/widget_stateful.dart';
+import 'package:agendamento_pet/domain/model/clientes.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +21,12 @@ class ClientesScreen extends StatefulWidget {
 
 class _ClientesScreenState
     extends WidgetStateful<ClientesScreen, DashboardController> {
+  @override
+  void initState() {
+    controller.fetchClients();
+    super.initState();
+  }
+
   final _formKey = GlobalKey<FormState>();
 
   final maskFormatter = MaskTextInputFormatter(
@@ -31,284 +40,397 @@ class _ClientesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomContainerWidget(
-        color: MColors.cian,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Card(
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SingleChildScrollView(
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Nome e Sexo
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildTextField(
-                                    'Nome:',
-                                    'Nome do cliente',
-                                    controller.nomeController,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o nome do cliente';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: buildDropdownField(
-                                    'Sexo:',
-                                    ['Escolha', 'Masculino', 'Feminino'],
-                                    validator: (value) {
-                                      if (value == null || value == 'Escolha') {
-                                        return 'Por favor, selecione o sexo';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Idade e CEP
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildDateField(
-                                    'Nascimento:',
-                                    'Data de Nascimento',
-                                    onDateSelected: (date) {
-                                      controller.dataNascimentoController.text =
-                                          "${date.day}/${date.month}/${date.year}";
-                                    },
-                                    validator: (value) {
-                                      if (controller.dataNascimentoController
-                                          .text.isEmpty) {
-                                        return 'Por favor, selecione a data de nascimento';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: buildTextField(
-                                    'CEP:',
-                                    'Digite o CEP',
-                                    controller.cepController,
-                                    inputFormatters: [maskCepFormatter],
-                                    keyboardType: TextInputType.number,
-                                    onChanged: (cep) {
-                                      if (cep.length == 9) {
-                                        // CEP com máscara: '#####-###'
-                                        controller.searchCep(cep, context);
-                                      }
-                                    },
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o CEP';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Cidade e UF (Campos Automáticos)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildTextField(
-                                    'Cidade:',
-                                    'Cidade',
-                                    controller.cidadeController,
-                                    readOnly: true,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Cidade não pode estar vazia';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: buildTextField(
-                                    'UF:',
-                                    'UF',
-                                    controller.estadoController,
-                                    readOnly: true,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'UF não pode estar vazia';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Endereço
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildTextField(
-                                    'Endereço:',
-                                    'Endereço do cliente',
-                                    controller.enderecoController,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o endereço';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Bairro e Número
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildTextField(
-                                    'Bairro:',
-                                    'Bairro',
-                                    controller.bairroController,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o bairro';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: buildTextField(
-                                    'Número:',
-                                    'Número da casa',
-                                    controller.numeroController,
-                                    keyboardType: TextInputType.number,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o número';
-                                      }
-                                      if (int.tryParse(value) == null) {
-                                        return 'Por favor, insira um número válido';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Telefone
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: buildTextField(
-                                    'Telefone:',
-                                    'Telefone',
-                                    controller.telefoneController,
-                                    inputFormatters: [maskFormatter],
-                                    keyboardType: TextInputType.phone,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Por favor, insira o telefone';
-                                      }
-                                      if (!maskFormatter.isFill()) {
-                                        return 'Por favor, insira um telefone válido';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 32),
-                            // Botão de Confirmação
-                            Center(
-                              child: SizedBox(
-                                width: 200,
-                                child: CustomButtomWidget(
-                                  buttonChild: Text(
-                                    'Confirmar Cadastro',
-                                    style: boldFont(
-                                      MColors.primaryWhite,
-                                      16.0,
+      body: Observer(
+        builder: (_) => controller.isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: MColors.blue,
+                ),
+              )
+            : CustomContainerWidget(
+                color: MColors.cian,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      _buildClientesListSection(),
+                      Expanded(
+                        flex: 2,
+                        child: Card(
+                          elevation: 5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: SingleChildScrollView(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Nome e Sexo
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Nome:',
+                                            'Nome do cliente',
+                                            controller.nomeController,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o nome do cliente';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: buildDropdownField(
+                                            'Sexo:',
+                                            [
+                                              'Escolha',
+                                              'Masculino',
+                                              'Feminino'
+                                            ],
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value == 'Escolha') {
+                                                return 'Por favor, selecione o sexo';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  onPressed: () async {
-                                    if (_formKey.currentState?.validate() ??
-                                        false) {
-                                      DateTime? dataNascimento =
-                                          DateFormat('dd/MM/yyyy').parse(
+                                    const SizedBox(height: 16),
+                                    // Idade e CEP
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildDateField(
+                                            'Nascimento:',
+                                            'Data de Nascimento',
+                                            onDateSelected: (date) {
                                               controller
+                                                      .dataNascimentoController
+                                                      .text =
+                                                  "${date.day}/${date.month}/${date.year}";
+                                            },
+                                            validator: (value) {
+                                              if (controller
                                                   .dataNascimentoController
-                                                  .text,
-                                              true);
+                                                  .text
+                                                  .isEmpty) {
+                                                return 'Por favor, selecione a data de nascimento';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: buildTextField(
+                                            'CEP:',
+                                            'Digite o CEP',
+                                            controller.cepController,
+                                            inputFormatters: [maskCepFormatter],
+                                            keyboardType: TextInputType.number,
+                                            onChanged: (cep) {
+                                              if (cep.length == 9) {
+                                                // CEP com máscara: '#####-###'
+                                                controller.searchCep(
+                                                    cep, context);
+                                              }
+                                            },
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o CEP';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Cidade e UF (Campos Automáticos)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Cidade:',
+                                            'Cidade',
+                                            controller.cidadeController,
+                                            readOnly: true,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Cidade não pode estar vazia';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: buildTextField(
+                                            'UF:',
+                                            'UF',
+                                            controller.estadoController,
+                                            readOnly: true,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'UF não pode estar vazia';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Endereço
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Endereço:',
+                                            'Endereço do cliente',
+                                            controller.enderecoController,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o endereço';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Bairro e Número
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Número:',
+                                            'Número da casa',
+                                            controller.numeroController,
+                                            keyboardType: TextInputType.number,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o número';
+                                              }
+                                              if (int.tryParse(value) == null) {
+                                                return 'Por favor, insira um número válido';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Complemento:',
+                                            'Complemento',
+                                            controller.complementoController,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o complemento';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Telefone
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Bairro:',
+                                            'Bairro',
+                                            controller.bairroController,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o bairro';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: buildTextField(
+                                            'Telefone:',
+                                            'Telefone',
+                                            controller.telefoneController,
+                                            inputFormatters: [maskFormatter],
+                                            keyboardType: TextInputType.phone,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Por favor, insira o telefone';
+                                              }
+                                              if (!maskFormatter.isFill()) {
+                                                return 'Por favor, insira um telefone válido';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 32),
+                                    // Botão de Confirmação
+                                    Center(
+                                      child: SizedBox(
+                                        width: 200,
+                                        child: CustomButtomWidget(
+                                          buttonChild: Text(
+                                            'Confirmar Cadastro',
+                                            style: boldFont(
+                                              MColors.primaryWhite,
+                                              16.0,
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            if (_formKey.currentState
+                                                    ?.validate() ??
+                                                false) {
+                                              DateTime? dataNascimento =
+                                                  DateFormat('dd/MM/yyyy').parse(
+                                                      controller
+                                                          .dataNascimentoController
+                                                          .text,
+                                                      true);
 
-                                      await controller.cadastrarCliente(
-                                        context: context,
-                                        sexo: sexoSelecionado,
-                                        dataNascimento: dataNascimento,
-                                      );
-                                      controller.clearFields();
-                                    }
-                                  },
-                                  color: MColors.blue,
+                                              await controller.cadastrarCliente(
+                                                context: context,
+                                                sexo: sexoSelecionado,
+                                                dataNascimento: dataNascimento,
+                                              );
+                                              controller.clearFields();
+                                            }
+                                          },
+                                          color: MColors.blue,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 1,
-                child: Image.asset(
-                  'assets/images/petshop.png',
-                  fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildClientesListSection() {
+    return Expanded(
+      flex: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, color: MColors.blue),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Clientes',
+                      style: TextStyle(
+                        fontSize: 8.sp,
+                        fontWeight: FontWeight.bold,
+                        color: MColors.blue,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextFormField(
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar Cliente',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Observer(
+                  builder: (_) {
+                    if (controller.clients.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'Nenhum cliente encontrado.',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }
+
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: controller.clients.length,
+                        itemBuilder: (context, index) {
+                          final clientes = controller.clients[index];
+                          return ListTile(
+                            title: Text(clientes.nome),
+                            subtitle: Text(
+                                'Nascimento: ${DateFormat('dd/MM/yyyy').format(clientes.dataNascimento)}\n'
+                                'Telefone: ${clientes.telefone}\n'
+                                'Cidade: ${clientes.cidade} - ${clientes.uf}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                _confirmarExclusao(context, clientes);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -425,6 +547,33 @@ class _ClientesScreenState
           validator: validator,
         ),
       ],
+    );
+  }
+
+  void _confirmarExclusao(BuildContext context, Clientes clientes) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Excluir Cliente'),
+          content: const Text('Tem certeza que deseja excluir o cliente'),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Excluir'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await controller.deleteClients(clientes, clientes.userId);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

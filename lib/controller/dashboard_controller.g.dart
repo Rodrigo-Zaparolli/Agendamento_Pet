@@ -89,6 +89,22 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     });
   }
 
+  late final _$availableTimeSlotsAtom = Atom(
+      name: '_DashboardControllerBase.availableTimeSlots', context: context);
+
+  @override
+  List<String> get availableTimeSlots {
+    _$availableTimeSlotsAtom.reportRead();
+    return super.availableTimeSlots;
+  }
+
+  @override
+  set availableTimeSlots(List<String> value) {
+    _$availableTimeSlotsAtom.reportWrite(value, super.availableTimeSlots, () {
+      super.availableTimeSlots = value;
+    });
+  }
+
   late final _$isLoadingAtom =
       Atom(name: '_DashboardControllerBase.isLoading', context: context);
 
@@ -118,6 +134,22 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   set isLoadingPet(bool value) {
     _$isLoadingPetAtom.reportWrite(value, super.isLoadingPet, () {
       super.isLoadingPet = value;
+    });
+  }
+
+  late final _$isTimeSlotEnabledAtom = Atom(
+      name: '_DashboardControllerBase.isTimeSlotEnabled', context: context);
+
+  @override
+  bool get isTimeSlotEnabled {
+    _$isTimeSlotEnabledAtom.reportRead();
+    return super.isTimeSlotEnabled;
+  }
+
+  @override
+  set isTimeSlotEnabled(bool value) {
+    _$isTimeSlotEnabledAtom.reportWrite(value, super.isTimeSlotEnabled, () {
+      super.isTimeSlotEnabled = value;
     });
   }
 
@@ -185,6 +217,54 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     });
   }
 
+  late final _$selectedTimeSlotAtom =
+      Atom(name: '_DashboardControllerBase.selectedTimeSlot', context: context);
+
+  @override
+  String? get selectedTimeSlot {
+    _$selectedTimeSlotAtom.reportRead();
+    return super.selectedTimeSlot;
+  }
+
+  @override
+  set selectedTimeSlot(String? value) {
+    _$selectedTimeSlotAtom.reportWrite(value, super.selectedTimeSlot, () {
+      super.selectedTimeSlot = value;
+    });
+  }
+
+  late final _$agendamentosDiaAtom =
+      Atom(name: '_DashboardControllerBase.agendamentosDia', context: context);
+
+  @override
+  int get agendamentosDia {
+    _$agendamentosDiaAtom.reportRead();
+    return super.agendamentosDia;
+  }
+
+  @override
+  set agendamentosDia(int value) {
+    _$agendamentosDiaAtom.reportWrite(value, super.agendamentosDia, () {
+      super.agendamentosDia = value;
+    });
+  }
+
+  late final _$agendamentosMesAtom =
+      Atom(name: '_DashboardControllerBase.agendamentosMes', context: context);
+
+  @override
+  int get agendamentosMes {
+    _$agendamentosMesAtom.reportRead();
+    return super.agendamentosMes;
+  }
+
+  @override
+  set agendamentosMes(int value) {
+    _$agendamentosMesAtom.reportWrite(value, super.agendamentosMes, () {
+      super.agendamentosMes = value;
+    });
+  }
+
   late final _$cadastrarClienteAsyncAction = AsyncAction(
       '_DashboardControllerBase.cadastrarCliente',
       context: context);
@@ -214,6 +294,15 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     return _$fetchClientsAsyncAction.run(() => super.fetchClients());
   }
 
+  late final _$deleteClientsAsyncAction =
+      AsyncAction('_DashboardControllerBase.deleteClients', context: context);
+
+  @override
+  Future<void> deleteClients(Clientes clientes, String userId) {
+    return _$deleteClientsAsyncAction
+        .run(() => super.deleteClients(clientes, userId));
+  }
+
   late final _$searchPetsAsyncAction =
       AsyncAction('_DashboardControllerBase.searchPets', context: context);
 
@@ -228,6 +317,14 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   @override
   Future<void> fetchPets() {
     return _$fetchPetsAsyncAction.run(() => super.fetchPets());
+  }
+
+  late final _$deletePetsAsyncAction =
+      AsyncAction('_DashboardControllerBase.deletePets', context: context);
+
+  @override
+  Future<void> deletePets(Pet pet) {
+    return _$deletePetsAsyncAction.run(() => super.deletePets(pet));
   }
 
   late final _$searchCepAsyncAction =
@@ -248,24 +345,14 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       required String tipoPet,
       required String raca,
       required String porte,
-      required String tutor,
-      required String clienteId}) {
+      required String tutor}) {
     return _$cadastrarPetAsyncAction.run(() => super.cadastrarPet(
         context: context,
         sexo: sexo,
         tipoPet: tipoPet,
         raca: raca,
         porte: porte,
-        tutor: tutor,
-        clienteId: clienteId));
-  }
-
-  late final _$deletePetAsyncAction =
-      AsyncAction('_DashboardControllerBase.deletePet', context: context);
-
-  @override
-  Future<void> deletePet(String petId) {
-    return _$deletePetAsyncAction.run(() => super.deletePet(petId));
+        tutor: tutor));
   }
 
   late final _$carregarAgendamentosAsyncAction = AsyncAction(
@@ -276,16 +363,6 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   Future<void> carregarAgendamentos() {
     return _$carregarAgendamentosAsyncAction
         .run(() => super.carregarAgendamentos());
-  }
-
-  late final _$verificarDisponibilidadeAsyncAction = AsyncAction(
-      '_DashboardControllerBase.verificarDisponibilidade',
-      context: context);
-
-  @override
-  Future<bool> verificarDisponibilidade(DateTime dataHora) {
-    return _$verificarDisponibilidadeAsyncAction
-        .run(() => super.verificarDisponibilidade(dataHora));
   }
 
   late final _$salvarAgendamentoAsyncAction = AsyncAction(
@@ -331,6 +408,23 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   @override
   Future<void> deleteServico(String servicoID) {
     return _$deleteServicoAsyncAction.run(() => super.deleteServico(servicoID));
+  }
+
+  late final _$updateServicoAsyncAction =
+      AsyncAction('_DashboardControllerBase.updateServico', context: context);
+
+  @override
+  Future<void> updateServico(String servicoId, Servico servico) {
+    return _$updateServicoAsyncAction
+        .run(() => super.updateServico(servicoId, servico));
+  }
+
+  late final _$searchServicesAsyncAction =
+      AsyncAction('_DashboardControllerBase.searchServices', context: context);
+
+  @override
+  Future<void> searchServices(String query) {
+    return _$searchServicesAsyncAction.run(() => super.searchServices(query));
   }
 
   late final _$_DashboardControllerBaseActionController =
@@ -381,6 +475,17 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   }
 
   @override
+  List<String> getAvailableTimeSlots(DateTime selectedDate) {
+    final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
+        name: '_DashboardControllerBase.getAvailableTimeSlots');
+    try {
+      return super.getAvailableTimeSlots(selectedDate);
+    } finally {
+      _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 isAuthenticated: ${isAuthenticated},
@@ -388,12 +493,17 @@ clients: ${clients},
 pets: ${pets},
 agendamentos: ${agendamentos},
 servico: ${servico},
+availableTimeSlots: ${availableTimeSlots},
 isLoading: ${isLoading},
 isLoadingPet: ${isLoadingPet},
+isTimeSlotEnabled: ${isTimeSlotEnabled},
 errorMessage: ${errorMessage},
 selectedClient: ${selectedClient},
 selectedPet: ${selectedPet},
-selectedServico: ${selectedServico}
+selectedServico: ${selectedServico},
+selectedTimeSlot: ${selectedTimeSlot},
+agendamentosDia: ${agendamentosDia},
+agendamentosMes: ${agendamentosMes}
     ''';
   }
 }

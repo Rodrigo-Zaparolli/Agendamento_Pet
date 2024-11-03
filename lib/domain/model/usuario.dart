@@ -13,6 +13,7 @@ class Usuario {
   final String? cep;
   final String? state;
   final String? city;
+  final String role;
 
   Usuario({
     required this.id,
@@ -25,6 +26,7 @@ class Usuario {
     this.cep,
     this.state,
     this.city,
+    required this.role,
   });
 
   factory Usuario.fromJson(Map<String, dynamic> json) =>

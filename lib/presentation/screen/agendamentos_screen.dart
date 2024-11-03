@@ -34,16 +34,23 @@ class _AgendamentosScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomContainerWidget(
-        color: MColors.cian,
-        child: Row(
-          children: [
-            _buildAgendamentoListSection(),
-            _buildAgendamentoFormSection(context),
-          ],
-        ),
-      ),
-    );
+        body: Observer(
+      builder: (_) => controller.isLoading
+          ? Center(
+              child: CircularProgressIndicator(
+                color: MColors.blue,
+              ),
+            )
+          : CustomContainerWidget(
+              color: MColors.cian,
+              child: Row(
+                children: [
+                  _buildAgendamentoListSection(),
+                  _buildAgendamentoFormSection(context),
+                ],
+              ),
+            ),
+    ));
   }
 
   Widget _buildAgendamentoListSection() {
@@ -110,8 +117,8 @@ class _AgendamentosScreenState
                               'Idade: ${agendamento.idade} anos, '
                               'Peso: ${agendamento.peso} kg\n'
                               'serviço: ${agendamento.servico.nome}\n'
-                              'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.dataHora)} '
-                              'Hora: ${DateFormat('HH:mm').format(agendamento.dataHora)}',
+                              'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.data)} '
+                              'Hora: ${agendamento.hora}',
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
@@ -203,7 +210,8 @@ class _AgendamentosScreenState
                 const SizedBox(height: 16),
                 _buildServicoDropdown(),
                 const SizedBox(height: 16),
-                buildDateField(context),
+                // buildDateField(context),
+                _buildDateSlotField(context),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -224,6 +232,69 @@ class _AgendamentosScreenState
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDateSlotField(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller.dataController,
+          readOnly: true,
+          decoration: const InputDecoration(
+            hintText: 'dd/MM/yyyy',
+            suffixIcon: Icon(Icons.calendar_today),
+            border: OutlineInputBorder(),
+          ),
+          onTap: () async {
+            FocusScope.of(context).requestFocus(FocusNode());
+
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime(2101),
+            );
+
+            if (pickedDate != null) {
+              setState(() {
+                controller.selectedDate = pickedDate;
+                controller.dataController.text =
+                    DateFormat('dd/MM/yyyy').format(pickedDate);
+
+                controller.availableTimeSlots =
+                    controller.getAvailableTimeSlots(pickedDate);
+
+                controller.selectedTimeSlot = null;
+              });
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        const Text('Horário:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: controller.selectedTimeSlot,
+          items: controller.availableTimeSlots.map((time) {
+            return DropdownMenuItem(
+              value: time,
+              child: Text(time),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              controller.selectedTimeSlot = value;
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: 'Selecione um horário',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -273,6 +344,10 @@ class _AgendamentosScreenState
   Widget _buildServicoDropdown() {
     return Observer(
       builder: (_) {
+        // Filtra os serviços de acordo com o porte do pet selecionado
+        final servicosFiltrados =
+            controller.getServicosPorPorte(controller.selectedPet);
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Column(
@@ -284,7 +359,7 @@ class _AgendamentosScreenState
                 width: double.infinity,
                 child: DropdownButtonFormField<Servico>(
                   value: controller.selectedServico,
-                  items: controller.servico.map((servico) {
+                  items: servicosFiltrados.map((servico) {
                     return DropdownMenuItem(
                       value: servico,
                       child: Text(
@@ -350,43 +425,71 @@ class _AgendamentosScreenState
           controller: controller.dataController,
           readOnly: true,
           decoration: const InputDecoration(
-            hintText: 'dd/MM/aaaa, --:--',
+            hintText: 'dd/MM/yyyy, --:--',
             suffixIcon: Icon(Icons.calendar_today),
             border: OutlineInputBorder(),
           ),
           onTap: () async {
             FocusScope.of(context).requestFocus(FocusNode());
 
-            // Seleciona a data
             DateTime? pickedDate = await showDatePicker(
               context: context,
               initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2101),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 30)),
             );
 
             if (pickedDate != null) {
-              // Seleciona a hora
-              TimeOfDay? pickedTime = await showTimePicker(
+              controller.selectedDate = pickedDate;
+              print(controller.selectedDate);
+
+              List<TimeOfDay> availableTimes = [];
+              for (int hour = 8; hour <= 18; hour++) {
+                if (hour == 12) continue;
+                availableTimes.add(TimeOfDay(hour: hour, minute: 0));
+                if (hour < 18) {
+                  availableTimes.add(TimeOfDay(hour: hour + 1, minute: 0));
+                }
+              }
+
+              final selectedTime = await showModalBottomSheet<TimeOfDay>(
                 context: context,
-                initialTime: TimeOfDay.now(),
+                builder: (BuildContext context) {
+                  return ListView(
+                    children: availableTimes.map((time) {
+                      return ListTile(
+                        title: Text(time.format(context)),
+                        onTap: () {
+                          Navigator.pop(context, time);
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
               );
 
-              if (pickedTime != null) {
-                // Combina data e hora
-                final DateTime selectedDateTime = DateTime(
+              if (selectedTime != null) {
+                // Formata e salva a data e hora selecionada
+                DateTime selectedDateTime = DateTime(
                   pickedDate.year,
                   pickedDate.month,
                   pickedDate.day,
-                  pickedTime.hour,
-                  pickedTime.minute,
+                  selectedTime.hour,
+                  selectedTime.minute,
                 );
 
-                // Formata data e hora
+                // Atualiza o controlador e a data formatada
                 setState(() {
                   controller.selectedDate = selectedDateTime;
                   controller.dataController.text =
                       DateFormat('dd/MM/yyyy, HH:mm').format(selectedDateTime);
+
+                  // Formatação correta da hora
+                  controller.selectedTimeSlot =
+                      '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+
+                  print(
+                      'Hora selecionada: ${controller.selectedTimeSlot}'); // Para debug
                 });
               }
             }
@@ -398,40 +501,39 @@ class _AgendamentosScreenState
 
   Future<void> _confirmarAgendamento(BuildContext context) async {
     try {
-      if (controller.selectedPet == null) {
+      if (controller.selectedPet == null ||
+          controller.selectedServico == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione um pet.')),
+          const SnackBar(
+              content: Text('Por favor, selecione um pet e serviço.')),
         );
         return;
       }
 
-      // Verifica se userId está disponível
-      final String userId =
-          controller.currentUserId; // Ajuste conforme necessário
+      // Verifique se a hora foi selecionada
+      if (controller.selectedTimeSlot == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione um horário.')),
+        );
+        return;
+      }
 
+      // Cria o agendamento
+      final String userId = controller.currentUserId;
       final agendamento = Agendamento(
         petNome: controller.selectedPet!.nome,
         raca: controller.racaPetController.text,
         idade: controller.idadePetController.text,
         peso: controller.pesoPetController.text,
         sexo: controller.selectedSexo!,
-        dataHora: controller.selectedDate!,
+        data: controller.selectedDate!,
+        hora: controller.selectedTimeSlot!,
         servico: controller.selectedServico!,
-        petId: controller.selectedPet!.id,
+        petId: controller.selectedPet!.clientId,
         userId: userId,
       );
 
-      bool existeAgendamentoNoMesmoHorario = controller.agendamentos
-          .any((a) => a.dataHora.isAtSameMomentAs(agendamento.dataHora));
-
-      if (existeAgendamentoNoMesmoHorario) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Já existe um agendamento para este horário.')),
-        );
-        return;
-      }
-
+      // Salva o agendamento
       await controller.salvarAgendamento(agendamento, context);
     } catch (e) {
       print(e);
@@ -450,15 +552,14 @@ class _AgendamentosScreenState
             TextButton(
               child: const Text('Cancelar'),
               onPressed: () {
-                Navigator.of(context).pop(); // Fecha o dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: const Text('Excluir'),
               onPressed: () async {
-                Navigator.of(context).pop(); // Fecha o dialog
-                await controller
-                    .excluirAgendamento(agendamento); // Exclui o agendamento
+                Navigator.of(context).pop();
+                await controller.excluirAgendamento(agendamento);
               },
             ),
           ],
