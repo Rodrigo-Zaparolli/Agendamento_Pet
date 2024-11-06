@@ -11,7 +11,9 @@ class Agendamento {
   String peso;
   String sexo;
   DateTime data;
+  DateTime? cancelledAt;
   String hora;
+  String motivoCancel;
   Servico servico;
   List<String> horariosOcupados;
 
@@ -25,7 +27,9 @@ class Agendamento {
     required this.peso,
     required this.sexo,
     required this.data,
+    this.cancelledAt,
     required this.hora,
+    required this.motivoCancel,
     required this.servico,
     List<String>? horariosOcupados,
   }) : horariosOcupados = horariosOcupados ?? [];
@@ -41,9 +45,11 @@ class Agendamento {
       'peso': peso,
       'sexo': sexo,
       'data': Timestamp.fromDate(data),
+      'cancelledAt': cancelledAt?.toIso8601String(),
       'hora': hora,
+      'motivoCancel': motivoCancel,
       'servico': servico.toJson(),
-      'horariosOcupados': horariosOcupados, // Inclui a nova lista no JSON
+      'horariosOcupados': horariosOcupados,
     };
   }
 
@@ -56,12 +62,15 @@ class Agendamento {
       raca: data['raca'] ?? '',
       idade: data['idade'] ?? '',
       peso: data['peso'] ?? '',
+      cancelledAt: data['cancelledAt'] != null
+          ? DateTime.parse(data['cancelledAt'])
+          : null,
       sexo: data['sexo'] ?? '',
       data: (data['data'] as Timestamp?)?.toDate() ?? DateTime.now(),
       hora: data['hora'] ?? '',
+      motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),
-      horariosOcupados: List<String>.from(data['horariosOcupados'] ??
-          []), // Converte a lista de horários ocupados do JSON
+      horariosOcupados: List<String>.from(data['horariosOcupados'] ?? []),
     );
   }
 
@@ -78,6 +87,7 @@ class Agendamento {
       sexo: data['sexo'] ?? '',
       data: (data['data'] as Timestamp?)?.toDate() ?? DateTime.now(),
       hora: data['hora'] ?? '',
+      motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),
       horariosOcupados: List<String>.from(data['horariosOcupados'] ?? []),
     );

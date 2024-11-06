@@ -30,6 +30,9 @@ abstract class FirestoreRepository {
   Future<List<Agendamento>> fetchAgendamentos(
       {bool paraVerificacaoConflito = false});
   Future<void> deleteAgendamento(String agendamentoId);
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo);
+  Future<List<Agendamento>> fetchAgendamentosCancelados();
 
   // Serviços
   Future<void> addServico(Servico servico);
@@ -218,13 +221,17 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
       QuerySnapshot snapshot;
 
       if (isManager || paraVerificacaoConflito) {
-        // Gerentes ou verificações de conflito acessam todos os agendamentos
-        snapshot = await firestore.collection('agendamentos').get();
+        snapshot = await firestore
+            .collection('agendamentos')
+            .where('motivoCancel', isEqualTo: "")
+            .get();
       } else {
         // Usuários não-gerentes acessam apenas seus próprios agendamentos
         snapshot = await firestore
             .collection('agendamentos')
             .where('userId', isEqualTo: userId)
+            .where('motivoCancel',
+                isEqualTo: "") // Filtra agendamentos com motivoCancel vazio
             .get();
       }
 
@@ -268,13 +275,79 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     }
   }
 
+  @override
+  Future<List<Agendamento>> fetchAgendamentosCancelados() async {
+    try {
+      String? userId = auth.currentUser?.uid;
+      bool isManager = await isUserManager(userId);
+
+      QuerySnapshot snapshot;
+
+      if (isManager) {
+        // Gerentes podem acessar todos os agendamentos cancelados
+        snapshot = await firestore
+            .collection('agendamentos')
+            .where('motivoCancel',
+                isNotEqualTo: "") // Filtra agendamentos cancelados
+            .get();
+      } else {
+        // Usuários não-gerentes acessam apenas seus próprios agendamentos cancelados
+        snapshot = await firestore
+            .collection('agendamentos')
+            .where('userId', isEqualTo: userId)
+            .where('motivoCancel',
+                isNotEqualTo: "") // Filtra agendamentos cancelados
+            .get();
+      }
+
+      List<Agendamento> agendamentos =
+          snapshot.docs.map((doc) => Agendamento.fromDocument(doc)).toList();
+
+      // Cria um formatador de hora para garantir o formato correto
+      final timeFormat = DateFormat("HH:mm");
+
+      // Ordena os agendamentos por data e hora
+      agendamentos.sort((a, b) {
+        int dateComparison = a.data.compareTo(b.data);
+
+        if (dateComparison == 0) {
+          try {
+            DateTime horaA = timeFormat.parse(a.hora);
+            DateTime horaB = timeFormat.parse(b.hora);
+
+            // Ajusta a data para comparação
+            DateTime dateTimeA = DateTime(1970, 1, 1, horaA.hour, horaA.minute);
+            DateTime dateTimeB = DateTime(1970, 1, 1, horaB.hour, horaB.minute);
+
+            return dateTimeA.compareTo(dateTimeB);
+          } catch (e) {
+            print("Erro ao comparar horas: $e");
+            return 0;
+          }
+        }
+
+        return dateComparison;
+      });
+
+      if (agendamentos.isEmpty) {
+        print("Nenhum agendamento cancelado encontrado.");
+      }
+
+      return agendamentos;
+    } catch (e) {
+      print("Erro ao buscar agendamentos cancelados: $e");
+      rethrow;
+    }
+  }
+
 // Atualiza a lista de horários ocupados
   Future<List<String>> fetchOccupiedSlots(DateTime selectedDate) async {
     try {
-      // Obtenha todos os agendamentos do dia selecionado
+      // Obtenha todos os agendamentos do dia selecionado, com motivoCancel vazio
       final QuerySnapshot snapshot = await firestore
           .collection('agendamentos')
           .where('data', isEqualTo: selectedDate)
+          .where('motivoCancel', isEqualTo: null)
           .get();
 
       List<String> occupiedSlots = [];
@@ -308,6 +381,18 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo) async {
+    await FirebaseFirestore.instance
+        .collection('agendamentos')
+        .doc(agendamentoId)
+        .update({
+      'motivoCancel': motivo,
+      'cancelledAt': DateTime.now(),
+    });
   }
 
   @override

@@ -22,6 +22,7 @@ class _DashboardScreenState
     controller.fetchClients();
     controller.fetchPets();
     controller.carregarAgendamentos();
+    controller.carregarAgendamentosCancelados();
     super.initState();
   }
 
@@ -62,7 +63,7 @@ class _DashboardScreenState
                                 child: _buildCard(
                                   icon: Icons.cancel,
                                   label: 'Cancelamentos do mês',
-                                  count: 0,
+                                  count: controller.agendamentosCanceladosMes,
                                 ),
                               ),
                             ],

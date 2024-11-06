@@ -474,6 +474,24 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     });
   }
 
+  late final _$agendamentosCanceladosMesAtom = Atom(
+      name: '_DashboardControllerBase.agendamentosCanceladosMes',
+      context: context);
+
+  @override
+  int get agendamentosCanceladosMes {
+    _$agendamentosCanceladosMesAtom.reportRead();
+    return super.agendamentosCanceladosMes;
+  }
+
+  @override
+  set agendamentosCanceladosMes(int value) {
+    _$agendamentosCanceladosMesAtom
+        .reportWrite(value, super.agendamentosCanceladosMes, () {
+      super.agendamentosCanceladosMes = value;
+    });
+  }
+
   late final _$cadastrarClienteAsyncAction = AsyncAction(
       '_DashboardControllerBase.cadastrarCliente',
       context: context);
@@ -574,6 +592,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
         .run(() => super.carregarAgendamentos());
   }
 
+  late final _$carregarAgendamentosCanceladosAsyncAction = AsyncAction(
+      '_DashboardControllerBase.carregarAgendamentosCancelados',
+      context: context);
+
+  @override
+  Future<void> carregarAgendamentosCancelados() {
+    return _$carregarAgendamentosCanceladosAsyncAction
+        .run(() => super.carregarAgendamentosCancelados());
+  }
+
   late final _$salvarAgendamentoAsyncAction = AsyncAction(
       '_DashboardControllerBase.salvarAgendamento',
       context: context);
@@ -590,9 +618,30 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       context: context);
 
   @override
-  Future<void> excluirAgendamento(Agendamento agendamento) {
+  Future<void> excluirAgendamento(Agendamento agendamento, String motivo) {
     return _$excluirAgendamentoAsyncAction
-        .run(() => super.excluirAgendamento(agendamento));
+        .run(() => super.excluirAgendamento(agendamento, motivo));
+  }
+
+  late final _$updateAgendamentoAsyncAction = AsyncAction(
+      '_DashboardControllerBase.updateAgendamento',
+      context: context);
+
+  @override
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo) {
+    return _$updateAgendamentoAsyncAction
+        .run(() => super.updateAgendamento(agendamentoId, agendamento, motivo));
+  }
+
+  late final _$searchAgendamentosAsyncAction = AsyncAction(
+      '_DashboardControllerBase.searchAgendamentos',
+      context: context);
+
+  @override
+  Future<void> searchAgendamentos(String query) {
+    return _$searchAgendamentosAsyncAction
+        .run(() => super.searchAgendamentos(query));
   }
 
   late final _$fecthServicoAsyncAction =
@@ -714,7 +763,8 @@ selectedPet: ${selectedPet},
 selectedServico: ${selectedServico},
 selectedTimeSlot: ${selectedTimeSlot},
 agendamentosDia: ${agendamentosDia},
-agendamentosMes: ${agendamentosMes}
+agendamentosMes: ${agendamentosMes},
+agendamentosCanceladosMes: ${agendamentosCanceladosMes}
     ''';
   }
 }

@@ -16,7 +16,7 @@ class RelatoriosScreen extends StatelessWidget {
             children: [
               DropdownButtonFormField(
                 items:
-                    ['Agendamentos', 'Clientes', 'Serviços'].map((relatorio) {
+                    ['Agendamentos', 'Clientes', 'Serviços',].map((relatorio) {
                   return DropdownMenuItem(
                       value: relatorio, child: Text(relatorio));
                 }).toList(),

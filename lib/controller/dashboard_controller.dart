@@ -159,6 +159,9 @@ abstract class _DashboardControllerBase with Store {
   @observable
   int agendamentosMes = 0;
 
+  @observable
+  int agendamentosCanceladosMes = 0;
+
   String? selectedSexo;
 
   DateTime? selectedDate;
@@ -602,6 +605,18 @@ abstract class _DashboardControllerBase with Store {
     tutorSelecionado = "Escolha";
   }
 
+  void clearAgendamentoFields() {
+    // Após confirmar, limpar os campos
+    racaPetController.clear();
+    nomePetController.clear();
+    idadePetController.clear();
+    pesoPetController.clear();
+    selectedSexo = 'Escolha';
+    selectedServico = null;
+    selectedDate = null;
+    selectedTimeSlot = null;
+  }
+
   bool _validateFields() {
     if (nomeController.text.isEmpty ||
         dataNascimentoController.text.isEmpty ||
@@ -787,6 +802,19 @@ abstract class _DashboardControllerBase with Store {
     // Atualizar contagens
     agendamentosDia = agendamentos.where((a) => isToday(a.data)).length;
     agendamentosMes = agendamentos.where((a) => isThisMonth(a.data)).length;
+
+    // Contagem dos agendamentos cancelados no mês
+  }
+
+  @action
+  Future<void> carregarAgendamentosCancelados() async {
+    List<Agendamento> fetchedAgendamentos =
+        await firebaseUsecase.fetchAgendamentosCancelados();
+
+    agendamentos = ObservableList<Agendamento>.of(fetchedAgendamentos);
+
+    agendamentosCanceladosMes =
+        agendamentos.where((a) => isThisMonth(a.data)).length;
   }
 
   bool isToday(DateTime date) {
@@ -948,12 +976,67 @@ abstract class _DashboardControllerBase with Store {
 
   // Função para excluir agendamento
   @action
-  Future<void> excluirAgendamento(Agendamento agendamento) async {
+  Future<void> excluirAgendamento(
+      Agendamento agendamento, String motivo) async {
     try {
       isLoading = true;
       await firebaseUsecase.deleteAgendamento(agendamento.id!);
 
       agendamentos.removeWhere((a) => a.id == agendamento.id);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo) async {
+    isLoading = true;
+    try {
+      await firebaseUsecase.updateAgendamento(
+          agendamentoId, agendamento, motivo);
+      print('Agendamento atualizado com sucesso.');
+    } catch (e) {
+      print('Erro ao atualizar agendamento: $e');
+      rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> searchAgendamentos(String query) async {
+    isLoading = true;
+    errorMessage = '';
+
+    try {
+      // Caso o termo de pesquisa esteja vazio, busca todos os agendamentos.
+      if (query.isEmpty) {
+        await carregarAgendamentos(); // Função que carrega todos os agendamentos
+        return;
+      }
+
+      final result = await firebaseUsecase.fetchAgendamentos();
+
+      // Filtra os agendamentos pelo nome do pet ou tipo de serviço
+      agendamentos = ObservableList.of(
+        result
+            .where((agendamento) =>
+                agendamento.petNome
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                agendamento.servico.nome
+                    .toLowerCase()
+                    .contains(query.toLowerCase()))
+            .toList(),
+      );
+
+      if (agendamentos.isEmpty) {
+        errorMessage = 'Nenhum agendamento encontrado para "$query".';
+      }
+    } catch (e) {
+      errorMessage = 'Erro ao buscar agendamentos: $e';
+      print(errorMessage);
     } finally {
       isLoading = false;
     }
@@ -1035,7 +1118,6 @@ abstract class _DashboardControllerBase with Store {
         .toList();
   }
 
-  @action
   @action
   Future<void> searchServices(String query) async {
     isLoading = true;

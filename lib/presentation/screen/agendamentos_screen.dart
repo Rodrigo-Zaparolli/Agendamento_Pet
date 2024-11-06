@@ -35,21 +35,15 @@ class _AgendamentosScreenState
   Widget build(BuildContext context) {
     return Scaffold(
         body: Observer(
-      builder: (_) => controller.isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: MColors.blue,
-              ),
-            )
-          : CustomContainerWidget(
-              color: MColors.cian,
-              child: Row(
-                children: [
-                  _buildAgendamentoListSection(),
-                  _buildAgendamentoFormSection(context),
-                ],
-              ),
-            ),
+      builder: (_) => CustomContainerWidget(
+        color: MColors.cian,
+        child: Row(
+          children: [
+            _buildAgendamentoListSection(),
+            _buildAgendamentoFormSection(context),
+          ],
+        ),
+      ),
     ));
   }
 
@@ -88,6 +82,7 @@ class _AgendamentosScreenState
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  onChanged: (value) => controller.searchAgendamentos(value),
                 ),
                 const SizedBox(height: 16),
                 Observer(
@@ -531,23 +526,41 @@ class _AgendamentosScreenState
         servico: controller.selectedServico!,
         petId: controller.selectedPet!.clientId,
         userId: userId,
+        motivoCancel: '',
       );
 
       // Salva o agendamento
       await controller.salvarAgendamento(agendamento, context);
+
+      controller.clearAgendamentoFields();
     } catch (e) {
       print(e);
     }
   }
 
   void _confirmarExclusao(BuildContext context, Agendamento agendamento) {
+    final TextEditingController motivoController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Excluir Agendamento'),
-          content: Text(
-              'Tem certeza que deseja excluir o agendamento de ${agendamento.petNome}?'),
+          title: const Text('Cancelar Agendamento'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                  'Tem certeza que deseja cancelar o agendamento de ${agendamento.petNome}?'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: motivoController,
+                decoration: const InputDecoration(
+                  labelText: 'Motivo do Cancelamento',
+                  hintText: 'Digite o motivo',
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               child: const Text('Cancelar'),
@@ -556,10 +569,24 @@ class _AgendamentosScreenState
               },
             ),
             TextButton(
-              child: const Text('Excluir'),
+              child: const Text('Confirmar Cancelamento'),
               onPressed: () async {
+                final String motivo = motivoController.text.trim();
+                if (motivo.isEmpty) {
+                  // Exibe uma mensagem de erro se o motivo estiver vazio
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'Por favor, informe o motivo do cancelamento.')),
+                  );
+                  return;
+                }
+
                 Navigator.of(context).pop();
-                await controller.excluirAgendamento(agendamento);
+
+                // await controller.excluirAgendamento(agendamento, motivo);
+                await controller.updateAgendamento(
+                    agendamento.id!, agendamento, motivo);
               },
             ),
           ],

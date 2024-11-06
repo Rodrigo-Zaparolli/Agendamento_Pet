@@ -139,20 +139,6 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                       ],
                     ),
                     const SizedBox(height: 20.0),
-                    Row(
-                      children: <Widget>[
-                        Icon(
-                          Icons.check_box,
-                          color: MColors.teal,
-                        ),
-                        const SizedBox(width: 5.0),
-                        Text(
-                          "Lembrar",
-                          style: normalFont(MColors.textDark, null),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20.0),
                     Observer(
                         builder: (_) => controller.isButtonDisabled
                             ? const Center(

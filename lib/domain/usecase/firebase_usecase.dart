@@ -29,6 +29,9 @@ abstract class FirebaseUsecase {
   Future<List<Agendamento>> fetchAgendamentos(
       {bool paraVerificacaoConflito = false});
   Future<void> deleteAgendamento(String agendamentoId);
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo);
+  Future<List<Agendamento>> fetchAgendamentosCancelados();
 
   // Serviços
   Future<void> addServico(Servico servico);
@@ -158,9 +161,29 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
+  Future<List<Agendamento>> fetchAgendamentosCancelados() async {
+    try {
+      return await firestoreRepository.fetchAgendamentosCancelados();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> deleteAgendamento(String agendamentoId) async {
     try {
       await firestoreRepository.deleteAgendamento(agendamentoId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateAgendamento(
+      String agendamentoId, Agendamento agendamento, String motivo) async {
+    try {
+      await firestoreRepository.updateAgendamento(
+          agendamentoId, agendamento, motivo);
     } catch (e) {
       rethrow;
     }
