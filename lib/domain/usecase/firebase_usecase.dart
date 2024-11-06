@@ -7,24 +7,27 @@ import 'package:agendamento_pet/domain/model/clientes.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class FirebaseUsecase {
-  // Clientes
+  // Users
   Future<void> registerUser(Usuario usuario);
   Future<void> updatePassword(String newPassword);
   Future<Usuario?> getUserDetails(String userId);
   Future<void> updateUserDetails(Usuario usuario);
+
+  //Clients
   Future<List<Clientes>> fetchClients(String userId);
   Future<void> addClient(Clientes client, String userId);
   Future<void> deleteClient(Clientes client, String userId);
 
   // Pets
-  Future<void> addPet(Pet pet, String userId);
+  Future<void> addPet(Pet pet);
   Future<List<Pet>> fetchPets(String clientId);
   Future<void> deletePet(Pet pet);
 
   // Agendamentos
   Future<void> addAgendamento(
       Agendamento agendamento, String petId, String userId);
-  Future<List<Agendamento>> fetchAgendamentos();
+  Future<List<Agendamento>> fetchAgendamentos(
+      {bool paraVerificacaoConflito = false});
   Future<void> deleteAgendamento(String agendamentoId);
 
   // Serviços
@@ -106,7 +109,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
 
   // Pets
   @override
-  Future<void> addPet(Pet pet, String userId) async {
+  Future<void> addPet(Pet pet) async {
     try {
       await firestoreRepository.addPets(pet);
     } catch (e) {
@@ -144,9 +147,11 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Agendamento>> fetchAgendamentos() async {
+  Future<List<Agendamento>> fetchAgendamentos(
+      {bool paraVerificacaoConflito = false}) async {
     try {
-      return await firestoreRepository.fetchAgendamentos();
+      return await firestoreRepository.fetchAgendamentos(
+          paraVerificacaoConflito: paraVerificacaoConflito);
     } catch (e) {
       rethrow;
     }

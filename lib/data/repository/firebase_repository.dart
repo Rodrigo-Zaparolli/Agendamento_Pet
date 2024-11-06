@@ -6,6 +6,7 @@ import 'package:agendamento_pet/domain/model/usuario.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:intl/intl.dart';
 
 abstract class FirestoreRepository {
   // Usuário
@@ -26,7 +27,8 @@ abstract class FirestoreRepository {
 
   // Agendamentos
   Future<void> addAgendamento(Agendamento agendamento, String petId);
-  Future<List<Agendamento>> fetchAgendamentos();
+  Future<List<Agendamento>> fetchAgendamentos(
+      {bool paraVerificacaoConflito = false});
   Future<void> deleteAgendamento(String agendamentoId);
 
   // Serviços
@@ -146,11 +148,17 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
   @override
   Future<void> addPets(Pet pet) async {
     try {
+      if (pet.id != null) {
+        await firestore.collection('pets').doc(pet.id).delete();
+      }
+
+      // Adicionar o pet com as novas informações
       DocumentReference docRef = await firestore.collection('pets').add({
         ...pet.toJson(),
         'clientId': pet.clientId,
       });
 
+      // Atualizar o campo 'id' com o ID do novo documento
       await docRef.update({'id': docRef.id});
     } catch (e) {
       rethrow;
@@ -201,24 +209,30 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
   }
 
   @override
-  Future<List<Agendamento>> fetchAgendamentos() async {
+  Future<List<Agendamento>> fetchAgendamentos(
+      {bool paraVerificacaoConflito = false}) async {
     try {
       String? userId = auth.currentUser?.uid;
       bool isManager = await isUserManager(userId);
 
-      // Busca os agendamentos dependendo do papel do usuário
-      final QuerySnapshot snapshot = isManager
-          ? await firestore
-              .collection('agendamentos')
-              .get() // Acesso total para gerentes
-          : await firestore
-              .collection('agendamentos')
-              .where('userId',
-                  isEqualTo: userId) // Apenas agendamentos do usuário
-              .get();
+      QuerySnapshot snapshot;
+
+      if (isManager || paraVerificacaoConflito) {
+        // Gerentes ou verificações de conflito acessam todos os agendamentos
+        snapshot = await firestore.collection('agendamentos').get();
+      } else {
+        // Usuários não-gerentes acessam apenas seus próprios agendamentos
+        snapshot = await firestore
+            .collection('agendamentos')
+            .where('userId', isEqualTo: userId)
+            .get();
+      }
 
       List<Agendamento> agendamentos =
           snapshot.docs.map((doc) => Agendamento.fromDocument(doc)).toList();
+
+      // Cria um formatador de hora para garantir o formato correto
+      final timeFormat = DateFormat("HH:mm");
 
       // Ordena os agendamentos por data e hora
       agendamentos.sort((a, b) {
@@ -226,9 +240,14 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
 
         if (dateComparison == 0) {
           try {
-            DateTime horaA = DateTime.parse('1970-01-01 ${formatHora(a.hora)}');
-            DateTime horaB = DateTime.parse('1970-01-01 ${formatHora(b.hora)}');
-            return horaA.compareTo(horaB);
+            DateTime horaA = timeFormat.parse(a.hora);
+            DateTime horaB = timeFormat.parse(b.hora);
+
+            // Ajusta a data para comparação
+            DateTime dateTimeA = DateTime(1970, 1, 1, horaA.hour, horaA.minute);
+            DateTime dateTimeB = DateTime(1970, 1, 1, horaB.hour, horaB.minute);
+
+            return dateTimeA.compareTo(dateTimeB);
           } catch (e) {
             print("Erro ao comparar horas: $e");
             return 0;

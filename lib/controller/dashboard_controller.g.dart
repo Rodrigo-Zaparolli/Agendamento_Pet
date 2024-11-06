@@ -9,6 +9,103 @@ part of 'dashboard_controller.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$DashboardController on _DashboardControllerBase, Store {
+  late final _$sexoSelecionadoAtom =
+      Atom(name: '_DashboardControllerBase.sexoSelecionado', context: context);
+
+  @override
+  String get sexoSelecionado {
+    _$sexoSelecionadoAtom.reportRead();
+    return super.sexoSelecionado;
+  }
+
+  @override
+  set sexoSelecionado(String value) {
+    _$sexoSelecionadoAtom.reportWrite(value, super.sexoSelecionado, () {
+      super.sexoSelecionado = value;
+    });
+  }
+
+  late final _$tipoPetSelecionadoAtom = Atom(
+      name: '_DashboardControllerBase.tipoPetSelecionado', context: context);
+
+  @override
+  String get tipoPetSelecionado {
+    _$tipoPetSelecionadoAtom.reportRead();
+    return super.tipoPetSelecionado;
+  }
+
+  @override
+  set tipoPetSelecionado(String value) {
+    _$tipoPetSelecionadoAtom.reportWrite(value, super.tipoPetSelecionado, () {
+      super.tipoPetSelecionado = value;
+    });
+  }
+
+  late final _$tipoPorteSelecionadoAtom = Atom(
+      name: '_DashboardControllerBase.tipoPorteSelecionado', context: context);
+
+  @override
+  String get tipoPorteSelecionado {
+    _$tipoPorteSelecionadoAtom.reportRead();
+    return super.tipoPorteSelecionado;
+  }
+
+  @override
+  set tipoPorteSelecionado(String value) {
+    _$tipoPorteSelecionadoAtom.reportWrite(value, super.tipoPorteSelecionado,
+        () {
+      super.tipoPorteSelecionado = value;
+    });
+  }
+
+  late final _$racaSelecionadaAtom =
+      Atom(name: '_DashboardControllerBase.racaSelecionada', context: context);
+
+  @override
+  String get racaSelecionada {
+    _$racaSelecionadaAtom.reportRead();
+    return super.racaSelecionada;
+  }
+
+  @override
+  set racaSelecionada(String value) {
+    _$racaSelecionadaAtom.reportWrite(value, super.racaSelecionada, () {
+      super.racaSelecionada = value;
+    });
+  }
+
+  late final _$porteSelecionadoAtom =
+      Atom(name: '_DashboardControllerBase.porteSelecionado', context: context);
+
+  @override
+  String get porteSelecionado {
+    _$porteSelecionadoAtom.reportRead();
+    return super.porteSelecionado;
+  }
+
+  @override
+  set porteSelecionado(String value) {
+    _$porteSelecionadoAtom.reportWrite(value, super.porteSelecionado, () {
+      super.porteSelecionado = value;
+    });
+  }
+
+  late final _$tutorSelecionadoAtom =
+      Atom(name: '_DashboardControllerBase.tutorSelecionado', context: context);
+
+  @override
+  String get tutorSelecionado {
+    _$tutorSelecionadoAtom.reportRead();
+    return super.tutorSelecionado;
+  }
+
+  @override
+  set tutorSelecionado(String value) {
+    _$tutorSelecionadoAtom.reportWrite(value, super.tutorSelecionado, () {
+      super.tutorSelecionado = value;
+    });
+  }
+
   late final _$isAuthenticatedAtom =
       Atom(name: '_DashboardControllerBase.isAuthenticated', context: context);
 
@@ -22,6 +119,22 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   set isAuthenticated(bool value) {
     _$isAuthenticatedAtom.reportWrite(value, super.isAuthenticated, () {
       super.isAuthenticated = value;
+    });
+  }
+
+  late final _$petIdToUpdateAtom =
+      Atom(name: '_DashboardControllerBase.petIdToUpdate', context: context);
+
+  @override
+  String get petIdToUpdate {
+    _$petIdToUpdateAtom.reportRead();
+    return super.petIdToUpdate;
+  }
+
+  @override
+  set petIdToUpdate(String value) {
+    _$petIdToUpdateAtom.reportWrite(value, super.petIdToUpdate, () {
+      super.petIdToUpdate = value;
     });
   }
 
@@ -137,6 +250,22 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
     });
   }
 
+  late final _$isLoadingSearchPetAtom = Atom(
+      name: '_DashboardControllerBase.isLoadingSearchPet', context: context);
+
+  @override
+  bool get isLoadingSearchPet {
+    _$isLoadingSearchPetAtom.reportRead();
+    return super.isLoadingSearchPet;
+  }
+
+  @override
+  set isLoadingSearchPet(bool value) {
+    _$isLoadingSearchPetAtom.reportWrite(value, super.isLoadingSearchPet, () {
+      super.isLoadingSearchPet = value;
+    });
+  }
+
   late final _$isTimeSlotEnabledAtom = Atom(
       name: '_DashboardControllerBase.isTimeSlotEnabled', context: context);
 
@@ -150,6 +279,86 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   set isTimeSlotEnabled(bool value) {
     _$isTimeSlotEnabledAtom.reportWrite(value, super.isTimeSlotEnabled, () {
       super.isTimeSlotEnabled = value;
+    });
+  }
+
+  late final _$isUpdateClientAtom =
+      Atom(name: '_DashboardControllerBase.isUpdateClient', context: context);
+
+  @override
+  bool get isUpdateClient {
+    _$isUpdateClientAtom.reportRead();
+    return super.isUpdateClient;
+  }
+
+  @override
+  set isUpdateClient(bool value) {
+    _$isUpdateClientAtom.reportWrite(value, super.isUpdateClient, () {
+      super.isUpdateClient = value;
+    });
+  }
+
+  late final _$isUpdatePetAtom =
+      Atom(name: '_DashboardControllerBase.isUpdatePet', context: context);
+
+  @override
+  bool get isUpdatePet {
+    _$isUpdatePetAtom.reportRead();
+    return super.isUpdatePet;
+  }
+
+  @override
+  set isUpdatePet(bool value) {
+    _$isUpdatePetAtom.reportWrite(value, super.isUpdatePet, () {
+      super.isUpdatePet = value;
+    });
+  }
+
+  late final _$currentClientUserIdAtom = Atom(
+      name: '_DashboardControllerBase.currentClientUserId', context: context);
+
+  @override
+  String? get currentClientUserId {
+    _$currentClientUserIdAtom.reportRead();
+    return super.currentClientUserId;
+  }
+
+  @override
+  set currentClientUserId(String? value) {
+    _$currentClientUserIdAtom.reportWrite(value, super.currentClientUserId, () {
+      super.currentClientUserId = value;
+    });
+  }
+
+  late final _$currentClientIdAtom =
+      Atom(name: '_DashboardControllerBase.currentClientId', context: context);
+
+  @override
+  String? get currentClientId {
+    _$currentClientIdAtom.reportRead();
+    return super.currentClientId;
+  }
+
+  @override
+  set currentClientId(String? value) {
+    _$currentClientIdAtom.reportWrite(value, super.currentClientId, () {
+      super.currentClientId = value;
+    });
+  }
+
+  late final _$racasSelecionadasAtom = Atom(
+      name: '_DashboardControllerBase.racasSelecionadas', context: context);
+
+  @override
+  List<String> get racasSelecionadas {
+    _$racasSelecionadasAtom.reportRead();
+    return super.racasSelecionadas;
+  }
+
+  @override
+  set racasSelecionadas(List<String> value) {
+    _$racasSelecionadasAtom.reportWrite(value, super.racasSelecionadas, () {
+      super.racasSelecionadas = value;
     });
   }
 
@@ -453,17 +662,6 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   }
 
   @override
-  void clearPetFields() {
-    final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
-        name: '_DashboardControllerBase.clearPetFields');
-    try {
-      return super.clearPetFields();
-    } finally {
-      _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
   int calcularIdade(String dataNascimento) {
     final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
         name: '_DashboardControllerBase.calcularIdade');
@@ -488,7 +686,14 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   @override
   String toString() {
     return '''
+sexoSelecionado: ${sexoSelecionado},
+tipoPetSelecionado: ${tipoPetSelecionado},
+tipoPorteSelecionado: ${tipoPorteSelecionado},
+racaSelecionada: ${racaSelecionada},
+porteSelecionado: ${porteSelecionado},
+tutorSelecionado: ${tutorSelecionado},
 isAuthenticated: ${isAuthenticated},
+petIdToUpdate: ${petIdToUpdate},
 clients: ${clients},
 pets: ${pets},
 agendamentos: ${agendamentos},
@@ -496,7 +701,13 @@ servico: ${servico},
 availableTimeSlots: ${availableTimeSlots},
 isLoading: ${isLoading},
 isLoadingPet: ${isLoadingPet},
+isLoadingSearchPet: ${isLoadingSearchPet},
 isTimeSlotEnabled: ${isTimeSlotEnabled},
+isUpdateClient: ${isUpdateClient},
+isUpdatePet: ${isUpdatePet},
+currentClientUserId: ${currentClientUserId},
+currentClientId: ${currentClientId},
+racasSelecionadas: ${racasSelecionadas},
 errorMessage: ${errorMessage},
 selectedClient: ${selectedClient},
 selectedPet: ${selectedPet},

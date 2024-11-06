@@ -1,6 +1,6 @@
 // lib/controller/dashboard_controller.dart
 
-// ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api
+// ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api, unnecessary_null_comparison
 
 import 'package:agendamento_pet/constants/dialog_helper.dart';
 import 'package:agendamento_pet/domain/model/agendamento.dart';
@@ -12,6 +12,7 @@ import 'package:agendamento_pet/domain/usecase/firebase_usecase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:mobx/mobx.dart';
 import 'package:flutter/material.dart';
 
@@ -71,7 +72,28 @@ abstract class _DashboardControllerBase with Store {
   final dHelper = DialogHelper();
 
   @observable
+  String sexoSelecionado = 'Escolha';
+
+  @observable
+  String tipoPetSelecionado = 'Escolha';
+
+  @observable
+  String tipoPorteSelecionado = 'Escolha';
+
+  @observable
+  String racaSelecionada = 'Escolha';
+
+  @observable
+  String porteSelecionado = 'Escolha';
+
+  @observable
+  String tutorSelecionado = 'Escolha';
+
+  @observable
   bool isAuthenticated = false;
+
+  @observable
+  String petIdToUpdate = "";
 
   @observable
   ObservableList<Clientes> clients = ObservableList<Clientes>();
@@ -95,7 +117,25 @@ abstract class _DashboardControllerBase with Store {
   bool isLoadingPet = false;
 
   @observable
+  bool isLoadingSearchPet = false;
+
+  @observable
   bool isTimeSlotEnabled = true;
+
+  @observable
+  bool isUpdateClient = false;
+
+  @observable
+  bool isUpdatePet = false;
+
+  @observable
+  String? currentClientUserId;
+
+  @observable
+  String? currentClientId;
+
+  @observable
+  List<String> racasSelecionadas = [];
 
   @observable
   String errorMessage = '';
@@ -140,6 +180,135 @@ abstract class _DashboardControllerBase with Store {
     '18:30',
   ];
 
+  final Map<String, List<String>> porte = {
+    'Cão': [
+      'Pequeno',
+      'Médio',
+      'Grande',
+    ],
+    'Gato': [
+      'Pequeno, de 2 a 4 kg',
+      'Médio, de 4 a 6 kg',
+      'Grande, acima de 6 kg',
+    ],
+  };
+
+  final Map<String, List<String>> portePequeno = {
+    'Cão': [
+      'Affenpinscher',
+      'Bichon Frisé',
+      'Boston Terrier',
+      'Cavalier King Charles Spaniel',
+      'Chihuahua',
+      'Cocker Spaniel Americano',
+      'Dachshund (Teckel)',
+      'Jack Russell Terrier',
+      'Lhasa Apso',
+      'Maltês',
+      'Papillon',
+      'Pekingese',
+      'Pomeranian (Spitz Alemão Anão)',
+      'Poodle Toy',
+      'Pug',
+      'Shih Tzu',
+      'Silky Terrier',
+      'Welsh Corgi Pembroke',
+      'West Highland White Terrier',
+      'Yorkshire Terrier',
+    ],
+    'Gato': [
+      'Singapura',
+      'Cornish Rex',
+      'Munchkin',
+      'Devon Rex',
+      'Sphynx',
+    ],
+  };
+
+  final Map<String, List<String>> porteMedio = {
+    'Cão': [
+      'American Staffordshire Terrier',
+      'Australian Shepherd',
+      'Basenji',
+      'Beagle',
+      'Border Collie',
+      'Bull Terrier',
+      'Bulldog Francês',
+      'Bulldog Inglês',
+      'Cocker Spaniel Inglês',
+      'Dálmata',
+      'Poodle Médio',
+      'Schnauzer Miniatura',
+      'Staffordshire Bull Terrier',
+      'Shiba Inu',
+      'Shetland Sheepdog',
+      'Shar-Pei',
+      'Whippet',
+      'Wheaten Terrier',
+    ],
+    'Gato': [
+      'Siamês',
+      'Abyssinian',
+      'Birmanês',
+      'American Shorthair',
+      'British Shorthair',
+      'Persa',
+      'Scottish Fold',
+    ],
+  };
+
+  final Map<String, List<String>> porteGrande = {
+    'Cão': [
+      'Akita Inu',
+      'Bernese Mountain Dog',
+      'Boxer',
+      'Bullmastiff',
+      'Cane Corso',
+      'Collie',
+      'Dogue Alemão',
+      'Fila Brasileiro',
+      'Golden Retriever',
+      'Dálmata',
+      'Golden Retriever',
+      'Labrador Retriever',
+      'Mastiff',
+      'Pastor Alemão',
+      'Pastor Belga',
+      'Rottweiler',
+      'Samoyed',
+      'São Bernardo',
+      'Siberian Husky',
+      'Terra Nova (Newfoundland)',
+      'Weimaraner',
+      'Wolfhound Irlandês',
+    ],
+    'Gato': [
+      'Maine Coon',
+      'Ragdoll',
+      'BirmNorueguês da Florestaanês',
+      'Savannah',
+      'Siberiano',
+    ],
+  };
+
+  final Map<String, List<String>> racas = {
+    'Cão': [
+      'Labrador',
+      'Poodle',
+      'Bulldog',
+      'Beagle',
+      'Golden Retriever',
+      'Spitz',
+      'Shih tzu',
+    ],
+    'Gato': [
+      'Persa',
+      'Siamês',
+      'Bengal',
+      'Sphynx',
+    ],
+  };
+
   List<String> slotsDisponiveis = [];
   List<String> horariosOcupados = [];
 
@@ -147,6 +316,12 @@ abstract class _DashboardControllerBase with Store {
     final User? user = _firebaseAuth.currentUser;
     return user?.uid ?? '';
   }
+
+  final maskFormatter = MaskTextInputFormatter(
+      mask: '(##) #####-####', filter: {"#": RegExp(r'[0-9]')});
+
+  final maskCepFormatter = MaskTextInputFormatter(
+      mask: '#####-###', filter: {"#": RegExp(r'[0-9]')});
 
   @action
   Future<void> cadastrarCliente({
@@ -156,7 +331,6 @@ abstract class _DashboardControllerBase with Store {
   }) async {
     print("Iniciando cadastro de cliente...");
 
-    // Verifique se os campos estão preenchidos corretamente
     if (!_validateFields()) {
       print("Validação de campos falhou");
       return;
@@ -171,6 +345,19 @@ abstract class _DashboardControllerBase with Store {
       print(
           'Nome: ${nomeController.text}, Sexo: $sexo, Data de Nascimento: $dataNascimento');
 
+      final existingClients = await firebaseUsecase.fetchClients(usuarioId);
+      final currentUserClients = existingClients
+          .where((client) => client.userId == usuarioId)
+          .toList();
+
+      if (currentUserClients.isNotEmpty) {
+        for (var client in currentUserClients) {
+          await firebaseUsecase.deleteClient(client, usuarioId);
+          print("Cliente com ID ${client.id} excluído.");
+        }
+      }
+
+      // Criação de novo cliente
       final cliente = Clientes(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         nome: nomeController.text,
@@ -179,6 +366,7 @@ abstract class _DashboardControllerBase with Store {
         endereco: enderecoController.text,
         numero: numeroController.text,
         bairro: bairroController.text,
+        cep: cepController.text,
         uf: estadoController.text,
         complemento: complementoController.text,
         cidade: cidadeController.text,
@@ -186,21 +374,36 @@ abstract class _DashboardControllerBase with Store {
         userId: usuarioId,
       );
 
-      // Chamada ao Firebase
+      // Chamada ao Firebase para adicionar o novo cliente
       await firebaseUsecase.addClient(cliente, usuarioId);
       print('Cliente cadastrado com sucesso');
       clearFields();
 
-      // Exibe um diálogo de sucesso
       await dHelper.showSuccessDialog(
           context, "Cadastro realizado com sucesso!");
-
       await fetchClients();
     } catch (e) {
       print("Erro ao cadastrar cliente: $e");
       errorMessage = e.toString();
       await dHelper.showErrorDialog(context, errorMessage);
     }
+  }
+
+  void preencherCamposCliente(Clientes clients) {
+    currentClientUserId = clients.id;
+    nomeController.text = clients.nome;
+    selectedSexo = clients.sexo;
+    dataNascimentoController.text =
+        DateFormat("dd/MM/yyyy").format(clients.dataNascimento);
+    cidadeController.text = clients.cidade;
+    estadoController.text = clients.uf;
+    enderecoController.text = clients.endereco;
+    numeroController.text = clients.numero;
+    complementoController.text = clients.complemento;
+    bairroController.text = clients.bairro;
+    cepController.text = clients.cep;
+    telefoneController.text = clients.telefone;
+    currentClientId = clients.userId;
   }
 
   @action
@@ -279,7 +482,7 @@ abstract class _DashboardControllerBase with Store {
 
   @action
   Future<void> searchPets(String query) async {
-    isLoadingPet = true;
+    isLoadingSearchPet = true;
     errorMessage = '';
 
     try {
@@ -291,7 +494,6 @@ abstract class _DashboardControllerBase with Store {
 
       final result = await firebaseUsecase.fetchPets(userId);
 
-      // Filtra os pets com base na consulta
       pets = ObservableList.of(
         result
             .where(
@@ -306,7 +508,7 @@ abstract class _DashboardControllerBase with Store {
       errorMessage = e.toString();
       print("Erro ao buscar pets: $e");
     } finally {
-      isLoadingPet = false;
+      isLoadingSearchPet = false;
     }
   }
 
@@ -317,7 +519,7 @@ abstract class _DashboardControllerBase with Store {
 
   @action
   Future<void> fetchPets() async {
-    isLoadingPet = true;
+    isLoadingSearchPet = true;
     errorMessagePet = '';
     print('Iniciando fetchPets...');
 
@@ -336,7 +538,7 @@ abstract class _DashboardControllerBase with Store {
       errorMessagePet = e.toString();
       print("Erro ao buscar pets: $e");
     } finally {
-      isLoadingPet = false;
+      isLoadingSearchPet = false;
       print('fetchPets concluído. isLoadingPet: $isLoadingPet');
     }
   }
@@ -366,7 +568,6 @@ abstract class _DashboardControllerBase with Store {
         const SnackBar(content: Text('Cep não encontrado... Verifique !')),
       );
 
-      // Limpa os campos se o CEP não for encontrado
       cidadeController.clear();
       estadoController.clear();
       enderecoController.clear();
@@ -384,20 +585,23 @@ abstract class _DashboardControllerBase with Store {
     bairroController.clear();
     cidadeController.clear();
     telefoneController.clear();
+    complementoController.clear();
   }
 
-  @action
   void clearPetFields() {
     nomePetController.clear();
-
-    racaPetController.clear();
-    portePetController.clear();
     nascimentoPetController.clear();
     idadePetController.clear();
     pesoPetController.clear();
+
+    // Limpar os observables
+    racaSelecionada = 'Escolha';
+    porteSelecionado = 'Escolha';
+    tipoPetSelecionado = 'Escolha';
+    sexoSelecionado = 'Escolha';
+    tutorSelecionado = "Escolha";
   }
 
-  // Método para validar os campos obrigatórios
   bool _validateFields() {
     if (nomeController.text.isEmpty ||
         dataNascimentoController.text.isEmpty ||
@@ -411,6 +615,42 @@ abstract class _DashboardControllerBase with Store {
     }
     errorMessage = '';
     return true;
+  }
+
+  void preencherCamposPet(Pet pet) {
+    currentClientUserId = pet.id;
+
+    // Atualizar os observables com os valores do pet
+    sexoSelecionado = pet.sexo;
+    tipoPetSelecionado = pet.tipo;
+    racaSelecionada = pet.raca;
+    porteSelecionado = pet.porte;
+    tutorSelecionado = pet.tutor;
+
+    // Atualizar os TextEditingController com os valores do pet
+    nomePetController.text = pet.nome;
+    nascimentoPetController.text = pet.nascimento;
+    idadePetController.text = pet.idade;
+    pesoPetController.text = pet.peso;
+
+    // Atualizar as raças com base no tipo e porte
+    atualizarRacas();
+  }
+
+  void atualizarRacas() {
+    // Atualiza as raças com base no tipo de pet e no porte selecionado
+    if (porteSelecionado == 'Pequeno') {
+      racasSelecionadas = portePequeno[tipoPetSelecionado] ?? [];
+    } else if (porteSelecionado == 'Médio') {
+      racasSelecionadas = porteMedio[tipoPetSelecionado] ?? [];
+    } else if (porteSelecionado == 'Grande') {
+      racasSelecionadas = porteGrande[tipoPetSelecionado] ?? [];
+    }
+
+    // Se a raça selecionada não estiver na nova lista, redefine para 'Escolha'
+    if (!racasSelecionadas.contains(racaSelecionada)) {
+      racaSelecionada = 'Escolha';
+    }
   }
 
   @action
@@ -430,6 +670,39 @@ abstract class _DashboardControllerBase with Store {
         throw Exception("Usuário não está logado.");
       }
 
+      // Obter todos os pets do usuário logado
+      final existingPets = await firebaseUsecase.fetchPets(usuarioId);
+
+      // Verificar se estamos atualizando um pet existente
+      if (isUpdatePet) {
+        final petToUpdate = existingPets.firstWhere(
+          (pet) => pet.id == petIdToUpdate,
+        );
+
+        if (petToUpdate != null) {
+          await firebaseUsecase.deletePet(petToUpdate);
+        } else {
+          print("Pet a ser atualizado não encontrado.");
+          return;
+        }
+      } else {
+        // Caso não seja uma atualização, impedir cadastro duplicado
+        final existingPetsWithSameAttributes = existingPets
+            .where((pet) =>
+                pet.nome == nomePetController.text &&
+                pet.tipo == tipoPet &&
+                pet.tutor == tutor)
+            .toList();
+
+        if (existingPetsWithSameAttributes.isNotEmpty) {
+          print("Um pet com esses atributos já existe.");
+          await dHelper.showErrorDialog(context,
+              "Já existe um pet com essas características cadastrado.");
+          return;
+        }
+      }
+
+      // Criar o novo objeto Pet
       final pet = Pet(
         clientId: usuarioId,
         nome: nomePetController.text,
@@ -443,14 +716,22 @@ abstract class _DashboardControllerBase with Store {
         tutor: tutor,
       );
 
-      await firebaseUsecase.addPet(pet, usuarioId);
+      // Adicionar o novo pet
+      await firebaseUsecase.addPet(pet);
 
       print('Pet cadastrado com sucesso, ID do cliente: $usuarioId');
       clearPetFields();
 
+      // Mostrar mensagem de sucesso
       await dHelper.showSuccessDialog(
           context, "Cadastro do pet realizado com sucesso!");
+
+      // Atualizar lista de pets
       await fetchPets();
+
+      // Resetar o estado de atualização
+      isUpdatePet = false;
+      petIdToUpdate = "";
     } catch (e) {
       print("Erro ao cadastrar pet: $e");
       errorMessage = e.toString();
@@ -540,12 +821,14 @@ abstract class _DashboardControllerBase with Store {
 
       // Verifica se o horário atual ou o próximo estão ocupados
       bool isOccupied = agendamentosDoDia.any((agendamento) {
+        // Marca horários como ocupados se já foram agendados
         return agendamento.hora == currentHour ||
             agendamento.hora == nextHour ||
             agendamento.horariosOcupados.contains(currentHour) ||
             agendamento.horariosOcupados.contains(nextHour);
       });
 
+      // Adiciona o horário se não estiver ocupado
       if (!isOccupied) {
         availableSlots.add(currentHour);
       }
@@ -555,12 +838,10 @@ abstract class _DashboardControllerBase with Store {
     if (selectedServico?.duracao == 120) {
       availableSlots.removeWhere((slot) {
         final hourPart = int.parse(slot.split(':')[0]);
+        // Remove o horário atual e o próximo, se for um serviço de 120 minutos
         return slot == '$hourPart:00' ||
-            (hourPart < 17 && slot == '${hourPart + 1}:00');
+            availableSlots.contains('${hourPart + 1}:00');
       });
-    } else if (selectedServico?.duracao == 60) {
-      availableSlots
-          .removeWhere((slot) => slot == '${selectedServico?.duracao}');
     }
 
     return availableSlots;
@@ -570,43 +851,34 @@ abstract class _DashboardControllerBase with Store {
   Future<void> salvarAgendamento(
       Agendamento agendamento, BuildContext context) async {
     try {
-      // Busca os agendamentos existentes (de todos os usuários)
-      final agendamentosExistentes = await firebaseUsecase.fetchAgendamentos();
+      // 1. Busca todos os agendamentos para verificar conflitos
+      final agendamentosExistentes = await firebaseUsecase.fetchAgendamentos(
+          paraVerificacaoConflito: true);
 
       // Formata a hora do agendamento para ter sempre dois dígitos
       String formattedHoraAgendamento = agendamento.hora.padLeft(5, '0');
       DateTime horaAgendamento =
           DateTime.parse('1970-01-01 $formattedHoraAgendamento');
 
-      // Verifica se já existe um agendamento no mesmo horário
+      // 2. Verifica se há conflitos de horário
       bool existeAgendamentoNoMesmoHorario = agendamentosExistentes.any((a) {
         String formattedHoraExistente = a.hora.padLeft(5, '0');
         DateTime horaExistente =
             DateTime.parse('1970-01-01 $formattedHoraExistente');
 
-        // Verifica se é o mesmo dia e se o horário existe
         if (a.data.isSameDay(agendamento.data)) {
           if (a.servico.duracao == 120) {
-            // Se o serviço tem duração de 120 minutos, verifica as duas horas
             return horaExistente.hour == horaAgendamento.hour ||
                 horaExistente.hour == horaAgendamento.hour + 1;
           } else {
-            // Para outros serviços, apenas verifica a hora
             return horaExistente.hour == horaAgendamento.hour;
           }
         }
         return false;
       });
 
-      // Verifica a lista de horários ocupados do modelo
-      bool existeHorarioOcupado = agendamentosExistentes.any((a) {
-        return a.horariosOcupados.contains(formattedHoraAgendamento) ||
-            (agendamento.servico.duracao == 120 &&
-                a.horariosOcupados.contains('${horaAgendamento.hour + 1}:00'));
-      });
-
-      if (existeAgendamentoNoMesmoHorario || existeHorarioOcupado) {
-        // Exibe o alerta de conflito
+      // 3. Exibe alerta se houver conflito
+      if (existeAgendamentoNoMesmoHorario) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -620,46 +892,43 @@ abstract class _DashboardControllerBase with Store {
             ],
           ),
         );
-      } else {
-        // Gera o ID do agendamento usando o timestamp atual
-        agendamento.id = DateTime.now().millisecondsSinceEpoch.toString();
-
-        // Adiciona o horário ocupado à lista do agendamento
-        if (agendamento.servico.duracao == 120) {
-          agendamento.horariosOcupados.add(formattedHoraAgendamento);
-          agendamento.horariosOcupados.add(
-              '${horaAgendamento.hour + 1}:00'); // Adiciona o próximo horário
-        } else {
-          agendamento.horariosOcupados.add(formattedHoraAgendamento);
-        }
-
-        await firebaseUsecase.addAgendamento(
-          agendamento,
-          agendamento.userId,
-          agendamento.petId,
-        );
-
-        // Adiciona o novo agendamento à lista local
-        agendamentos.add(agendamento);
-        clearPetFields();
-
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-              title: const Text("Sucesso"),
-              content: const Text("Agendamento salvo com sucesso!"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text("OK"),
-                )
-              ]),
-        );
+        return; // Interrompe o fluxo caso haja conflito
       }
+
+      // 4. Salva o agendamento se não houver conflito
+      agendamento.id = DateTime.now().millisecondsSinceEpoch.toString();
+
+      if (agendamento.servico.duracao == 120) {
+        agendamento.horariosOcupados.add(formattedHoraAgendamento);
+        agendamento.horariosOcupados.add('${horaAgendamento.hour + 1}:00');
+      } else {
+        agendamento.horariosOcupados.add(formattedHoraAgendamento);
+      }
+
+      await firebaseUsecase.addAgendamento(
+        agendamento,
+        agendamento.userId,
+        agendamento.petId,
+      );
+
+      agendamentos.add(agendamento);
+      clearPetFields();
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Sucesso"),
+          content: const Text("Agendamento salvo com sucesso!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            )
+          ],
+        ),
+      );
     } catch (e) {
       print("Erro ao salvar agendamento: $e");
-
-      // Exibe o alerta de erro
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
