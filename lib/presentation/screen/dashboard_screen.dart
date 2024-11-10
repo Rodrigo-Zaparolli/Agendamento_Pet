@@ -231,7 +231,7 @@ class _DashboardScreenState
                           leading: Icon(Icons.person, color: MColors.blue),
                           title: Text(client.nome),
                           subtitle: Text(
-                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(client.dataNascimento)}\n'
+                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(client.nascimento)}\n'
                               'Telefone: ${client.telefone}\n'
                               'Cidade: ${client.cidade} - ${client.uf}'),
                           onTap: () {},

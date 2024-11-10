@@ -8,7 +8,8 @@ class Clientes {
   String id;
   String nome;
   String sexo;
-  DateTime dataNascimento;
+  DateTime dtCadastro;
+  DateTime nascimento;
   String endereco;
   String numero;
   String bairro;
@@ -23,7 +24,8 @@ class Clientes {
     required this.id,
     required this.nome,
     required this.sexo,
-    required this.dataNascimento,
+    required this.dtCadastro,
+    required this.nascimento,
     required this.endereco,
     required this.numero,
     required this.bairro,
@@ -46,9 +48,12 @@ class Clientes {
       id: doc.id,
       nome: data['nome'] ?? '',
       sexo: data['sexo'] ?? '',
-      dataNascimento: data['dataNascimento'] is String
-          ? DateTime.parse(data['dataNascimento'])
-          : (data['dataNascimento'] as Timestamp).toDate(),
+      dtCadastro: data['dtCadastro'] is String
+          ? DateTime.parse(data['dtCadastro'])
+          : (data['dtCadastro'] as Timestamp).toDate(),
+      nascimento: data['nascimento'] is String
+          ? DateTime.parse(data['nascimento'])
+          : (data['nascimento'] as Timestamp).toDate(),
       endereco: data['endereco'] ?? '',
       numero: data['numero'] ?? '',
       bairro: data['bairro'] ?? '',

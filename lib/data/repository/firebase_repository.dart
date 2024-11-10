@@ -39,6 +39,22 @@ abstract class FirestoreRepository {
   Future<List<Servico>> fetchServico();
   Future<void> deleteServico(String servicoId);
   Future<void> updateServico(String servicoId, Servico servico);
+
+  //Relatórios
+  Future<List<Map<String, dynamic>>> listarNovosClientes(
+      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> contarServicosRealizados(
+      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> aniversariosClientes(
+      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> aniversariosPets(
+      DateTime inicio, DateTime fim);
+  Future<Map<String, int>> relatorioServicosPorTipo(
+      DateTime inicio, DateTime fim);
+
+  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
+      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
 }
 
 @Injectable(as: FirestoreRepository)
@@ -424,5 +440,187 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
         .collection('servicos')
         .doc(servicoId)
         .update(servico.toJson());
+  }
+
+  //RELATÓRIOS
+
+  // Função para contar clientes cadastrados em um intervalo de tempo
+  @override
+  Future<List<Map<String, dynamic>>> listarNovosClientes(
+      DateTime inicio, DateTime fim) async {
+    final querySnapshot = await firestore
+        .collection('clientes')
+        .where('dtCadastro', isGreaterThanOrEqualTo: inicio)
+        .where('dtCadastro', isLessThanOrEqualTo: fim)
+        .get();
+
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  // Função para contar serviços realizados em um intervalo de tempo
+  @override
+  Future<List<Map<String, dynamic>>> contarServicosRealizados(
+      DateTime inicio, DateTime fim) async {
+    try {
+      final startTimestamp = Timestamp.fromDate(inicio);
+      final endTimestamp = Timestamp.fromDate(fim);
+
+      final querySnapshot = await firestore
+          .collection('agendamentos')
+          .where('data', isGreaterThanOrEqualTo: startTimestamp)
+          .where('data', isLessThanOrEqualTo: endTimestamp)
+          .where('motivoCancel', isEqualTo: "")
+          .get();
+
+      // Inicializa o mapa para armazenar a contagem de serviços
+      Map<String, int> servicosContados = {};
+
+      // Itera sobre os agendamentos e agrupa por nome do serviço
+      for (var doc in querySnapshot.docs) {
+        var data = doc.data();
+        String nomeServico = data['servico']['nome'];
+
+        // Conta as ocorrências do serviço
+        if (servicosContados.containsKey(nomeServico)) {
+          servicosContados[nomeServico] = servicosContados[nomeServico]! + 1;
+        } else {
+          servicosContados[nomeServico] = 1;
+        }
+      }
+
+      // Transforma o mapa em uma lista de mapas
+      List<Map<String, dynamic>> servicosList = servicosContados.entries
+          .map((entry) => {
+                'servico': entry.key,
+                'quantidade': entry.value,
+              })
+          .toList();
+
+      // Retorna a lista
+      return servicosList;
+    } catch (e) {
+      print("Erro ao contar serviços: $e");
+      rethrow;
+    }
+  }
+
+  // Função para buscar aniversários de clientes em uma data específica
+  @override
+  Future<List<Map<String, dynamic>>> aniversariosClientes(
+      DateTime inicio, DateTime fim) async {
+    final querySnapshot = await firestore.collection('clientes').get();
+
+    final int mesInicio = inicio.month;
+    final int diaInicio = inicio.day;
+    final int mesFim = fim.month;
+    final int diaFim = fim.day;
+
+    final aniversariantes = querySnapshot.docs
+        .where((doc) {
+          final Timestamp nascimentoTimestamp = doc['nascimento'];
+          final DateTime nascimento = nascimentoTimestamp.toDate();
+
+          final int mesNascimento = nascimento.month;
+          final int diaNascimento = nascimento.day;
+
+          return (mesNascimento > mesInicio ||
+                  (mesNascimento == mesInicio && diaNascimento >= diaInicio)) &&
+              (mesNascimento < mesFim ||
+                  (mesNascimento == mesFim && diaNascimento <= diaFim));
+        })
+        .map((doc) => doc.data())
+        .toList();
+
+    return aniversariantes;
+  }
+
+  // Função para buscar aniversários de pets em uma data específica
+  @override
+  Future<List<Map<String, dynamic>>> aniversariosPets(
+      DateTime inicio, DateTime fim) async {
+    final querySnapshot = await firestore.collection('pets').get();
+
+    final int mesInicio = inicio.month;
+    final int diaInicio = inicio.day;
+    final int mesFim = fim.month;
+    final int diaFim = fim.day;
+
+    final aniversariantes = querySnapshot.docs
+        .where((doc) {
+          final Timestamp nascimentoTimestamp = doc['nascimento'];
+          final DateTime nascimento = nascimentoTimestamp.toDate();
+
+          final int mesNascimento = nascimento.month;
+          final int diaNascimento = nascimento.day;
+
+          return (mesNascimento > mesInicio ||
+                  (mesNascimento == mesInicio && diaNascimento >= diaInicio)) &&
+              (mesNascimento < mesFim ||
+                  (mesNascimento == mesFim && diaNascimento <= diaFim));
+        })
+        .map((doc) => doc.data())
+        .toList();
+
+    return aniversariantes;
+  }
+
+  // Função para gerar relatório de serviço por tipo de serviço
+  @override
+  Future<Map<String, int>> relatorioServicosPorTipo(
+      DateTime inicio, DateTime fim) async {
+    final querySnapshot = await firestore
+        .collection('agendamentos')
+        .where('data', isGreaterThanOrEqualTo: inicio)
+        .where('data', isLessThanOrEqualTo: fim)
+        .where('motivoCancel', isEqualTo: "")
+        .get();
+
+    final Map<String, int> servicoContagem = {};
+    for (var doc in querySnapshot.docs) {
+      final tipoServico = doc['tipoServico'];
+      servicoContagem[tipoServico] = (servicoContagem[tipoServico] ?? 0) + 1;
+    }
+
+    return servicoContagem;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
+      DateTime inicio, DateTime fim) async {
+    try {
+      final snapshot = await firestore
+          .collection('clientes')
+          .where('dataCadastro', isGreaterThanOrEqualTo: inicio)
+          .where('dataCadastro', isLessThanOrEqualTo: fim)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => {
+                'nome': doc['nome'],
+                'dataCadastro': doc['dataCadastro'],
+              })
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchServicosCadastrados() async {
+    try {
+      final snapshot = await firestore.collection('servicos').get();
+
+      final servicos = snapshot.docs.map((doc) => doc.data()).toList();
+
+      servicos.sort((a, b) {
+        final nomeA = a['nome']?.toString() ?? '';
+        final nomeB = b['nome']?.toString() ?? '';
+        return nomeA.compareTo(nomeB);
+      });
+
+      return servicos;
+    } catch (e) {
+      rethrow;
+    }
   }
 }

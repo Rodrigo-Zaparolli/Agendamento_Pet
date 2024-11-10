@@ -9,7 +9,7 @@ class Pet {
   String nome;
   String raca;
   String porte;
-  String nascimento;
+  DateTime nascimento;
   String idade;
   String peso;
   String sexo;
@@ -33,7 +33,22 @@ class Pet {
   factory Pet.fromJson(Map<String, dynamic> json) => _$PetFromJson(json);
   Map<String, dynamic> toJson() => _$PetToJson(this);
 
-  static Pet fromDocument(DocumentSnapshot doc) {
-    return Pet.fromJson(doc.data() as Map<String, dynamic>);
+  factory Pet.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Pet(
+      id: doc.id,
+      nome: data['nome'] ?? '',
+      sexo: data['sexo'] ?? '',
+      nascimento: data['nascimento'] is String
+          ? DateTime.parse(data['nascimento'])
+          : (data['nascimento'] as Timestamp).toDate(),
+      raca: data['raca'] ?? '',
+      porte: data['porte'] ?? '',
+      idade: data['idade'] ?? '',
+      peso: data['peso'] ?? '',
+      tipo: data['tipo'] ?? '',
+      tutor: data['tutor'] ?? '',
+      clientId: data['clientId'] ?? '',
+    );
   }
 }

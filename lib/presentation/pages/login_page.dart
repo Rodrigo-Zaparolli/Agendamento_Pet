@@ -141,8 +141,9 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                     const SizedBox(height: 20.0),
                     Observer(
                         builder: (_) => controller.isButtonDisabled
-                            ? const Center(
-                                child: CircularProgressIndicator(),
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                    color: MColors.blue),
                               )
                             : CustomButtomWidget(
                                 buttonChild: Text(

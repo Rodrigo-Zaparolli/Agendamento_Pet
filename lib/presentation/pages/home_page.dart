@@ -96,8 +96,8 @@ class _HomePageState extends WidgetStateful<HomePage, HomeController> {
   Widget build(BuildContext context) {
     return Observer(
       builder: (_) => controller.loading
-          ? const Center(
-              child: CircularProgressIndicator(),
+          ? Center(
+              child: CircularProgressIndicator(color: MColors.blue),
             )
           : Scaffold(
               appBar: CustomAppBarWidget(

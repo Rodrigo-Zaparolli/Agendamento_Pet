@@ -174,7 +174,8 @@ class _RegistrationPageState
                         const SizedBox(height: 20.0),
                         controller.isButtonDisabled == true
                             ? CustomButtomWidget(
-                                buttonChild: const CircularProgressIndicator(),
+                                buttonChild: CircularProgressIndicator(
+                                    color: MColors.blue),
                                 onPressed: () {},
                                 color: Colors.white)
                             : CustomButtomWidget(

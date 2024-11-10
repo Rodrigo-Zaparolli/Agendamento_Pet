@@ -378,7 +378,9 @@ class _ClientesScreenState
                 Observer(
                   builder: (_) {
                     if (controller.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: CircularProgressIndicator(color: MColors.blue),
+                      );
                     }
                     if (controller.clients.isEmpty) {
                       return const Center(
@@ -397,7 +399,7 @@ class _ClientesScreenState
                           return ListTile(
                             title: Text(clientes.nome),
                             subtitle: Text(
-                                'Nascimento: ${DateFormat('dd/MM/yyyy').format(clientes.dataNascimento)}\n'
+                                'Nascimento: ${DateFormat('dd/MM/yyyy').format(clientes.nascimento)}\n'
                                 'Telefone: ${clientes.telefone}\n'
                                 'Cidade: ${clientes.cidade} - ${clientes.uf}'),
                             trailing: Row(
@@ -579,7 +581,7 @@ class _ClientesScreenState
     // Carregar os dados do cliente e serviço nos controladores
     final nomeController = TextEditingController(text: cliente.nome);
     final dataNascimentoController =
-        TextEditingController(text: cliente.dataNascimento.toString());
+        TextEditingController(text: cliente.nascimento.toString());
     final servicoNomeController = TextEditingController(text: servico.nome);
     final precoController =
         TextEditingController(text: servico.preco.toString());

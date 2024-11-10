@@ -379,7 +379,9 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                 Observer(
                   builder: (_) {
                     if (controller.isLoadingSearchPet) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: CircularProgressIndicator(color: MColors.blue),
+                      );
                     }
                     if (controller.pets.isEmpty) {
                       return const Center(
@@ -398,7 +400,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                           return ListTile(
                             title: Text(pets.nome),
                             subtitle: Text(
-                              'Nascimento: ${pets.nascimento}\n'
+                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(pets.nascimento)}\n'
                               'Raça: ${pets.raca}\n'
                               'Peso: ${pets.peso}\n'
                               'Porte: ${pets.porte}\n'

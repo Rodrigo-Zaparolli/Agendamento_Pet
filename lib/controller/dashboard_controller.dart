@@ -365,7 +365,8 @@ abstract class _DashboardControllerBase with Store {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         nome: nomeController.text,
         sexo: sexo,
-        dataNascimento: dataNascimento,
+        dtCadastro: DateTime.now(),
+        nascimento: dataNascimento,
         endereco: enderecoController.text,
         numero: numeroController.text,
         bairro: bairroController.text,
@@ -397,7 +398,7 @@ abstract class _DashboardControllerBase with Store {
     nomeController.text = clients.nome;
     selectedSexo = clients.sexo;
     dataNascimentoController.text =
-        DateFormat("dd/MM/yyyy").format(clients.dataNascimento);
+        DateFormat("dd/MM/yyyy").format(clients.nascimento);
     cidadeController.text = clients.cidade;
     estadoController.text = clients.uf;
     enderecoController.text = clients.endereco;
@@ -523,6 +524,7 @@ abstract class _DashboardControllerBase with Store {
   @action
   Future<void> fetchPets() async {
     isLoadingSearchPet = true;
+    isLoadingPet = true;
     errorMessagePet = '';
     print('Iniciando fetchPets...');
 
@@ -542,6 +544,8 @@ abstract class _DashboardControllerBase with Store {
       print("Erro ao buscar pets: $e");
     } finally {
       isLoadingSearchPet = false;
+      isLoadingPet = false;
+
       print('fetchPets concluído. isLoadingPet: $isLoadingPet');
     }
   }
@@ -644,7 +648,9 @@ abstract class _DashboardControllerBase with Store {
 
     // Atualizar os TextEditingController com os valores do pet
     nomePetController.text = pet.nome;
-    nascimentoPetController.text = pet.nascimento;
+    nascimentoPetController.text =
+        DateFormat("dd/MM/yyyy").format(dataNascimento!);
+    ;
     idadePetController.text = pet.idade;
     pesoPetController.text = pet.peso;
 
@@ -723,7 +729,7 @@ abstract class _DashboardControllerBase with Store {
         nome: nomePetController.text,
         raca: raca,
         porte: porte,
-        nascimento: nascimentoPetController.text,
+        nascimento: dataNascimento!,
         idade: idadePetController.text,
         peso: pesoPetController.text,
         sexo: sexo,
@@ -1155,6 +1161,16 @@ abstract class _DashboardControllerBase with Store {
       print("Erro ao buscar serviços: $e");
     } finally {
       isLoading = false;
+    }
+  }
+
+  String formatDate(String date) {
+    try {
+      DateTime parsedDate = DateTime.parse(date);
+      return DateFormat('dd/MM/yyyy').format(parsedDate);
+    } catch (e) {
+      print("Erro ao formatar data: $e");
+      return date;
     }
   }
 }

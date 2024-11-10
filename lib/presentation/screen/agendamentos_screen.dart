@@ -88,7 +88,9 @@ class _AgendamentosScreenState
                 Observer(
                   builder: (_) {
                     if (controller.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: CircularProgressIndicator(color: MColors.blue),
+                      );
                     }
 
                     if (controller.agendamentos.isEmpty) {
