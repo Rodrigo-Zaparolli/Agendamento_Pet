@@ -149,7 +149,7 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                                 buttonChild: Text(
                                   "Entrar",
                                   style: boldFont(
-                                    MColors.primaryWhite,
+                                    const Color.fromARGB(255, 255, 255, 255),
                                     16.0,
                                   ),
                                 ),

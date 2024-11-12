@@ -29,12 +29,12 @@ class IndexPage extends StatelessWidget {
                   padding: const EdgeInsets.all(20.0),
                   child: Image.asset(
                     "assets/images/petshop.png",
-                    height: 300,
+                    height: 375,
                   ),
                 ),
                 const SizedBox(height: 30.0),
                 Text(
-                  "Bem-vindo ao Pet Shop",
+                  "Bem-vindo",
                   style: boldFont(MColors.textDark, 30.0),
                   textAlign: TextAlign.center,
                 ),
