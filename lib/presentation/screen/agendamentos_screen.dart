@@ -140,94 +140,109 @@ class _AgendamentosScreenState
   Widget _buildAgendamentoFormSection(BuildContext context) {
     return Expanded(
       flex: 2,
-      child: SingleChildScrollView(
-        child: Card(
-          elevation: 2,
-          margin: const EdgeInsets.all(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.pets, color: MColors.blue),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Agendamento',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: MColors.blue,
+      child: Observer(
+        builder: (_) => controller.isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: MColors.blue,
+                ),
+              )
+            : Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.all(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.pets, color: MColors.blue),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Agendamento',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: MColors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPetDropdown(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: buildTextField('Raça:', 'Raça',
+                                      controller.racaPetController),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: buildTextField(
+                                      'Idade:',
+                                      'Idade do pet',
+                                      controller.idadePetController),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: buildTextField('Peso:', 'Peso do pet',
+                                      controller.pesoPetController),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            const Text('Sexo:',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            DropdownButtonFormField<String>(
+                              value: controller.selectedSexo,
+                              items: ['Escolha', 'Macho', 'Fêmea']
+                                  .map((label) => DropdownMenuItem(
+                                        value: label,
+                                        child: Text(label),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  controller.selectedSexo = value;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildServicoDropdown(),
+                            const SizedBox(height: 16),
+                            _buildDateSlotField(context),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: CustomButtomWidget(
+                                buttonChild: Text(
+                                  'Confirmar Agendamento',
+                                  style: boldFont(
+                                    MColors.primaryWhite,
+                                    16.0,
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  await _confirmarAgendamento(context);
+                                },
+                                color: MColors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildPetDropdown(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: buildTextField(
-                          'Raça:', 'Raça', controller.racaPetController),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: buildTextField('Idade:', 'Idade do pet',
-                          controller.idadePetController),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: buildTextField(
-                          'Peso:', 'Peso do pet', controller.pesoPetController),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text('Sexo:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                DropdownButtonFormField<String>(
-                  value: controller.selectedSexo,
-                  items: ['Escolha', 'Macho', 'Fêmea']
-                      .map((label) => DropdownMenuItem(
-                            value: label,
-                            child: Text(label),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      controller.selectedSexo = value;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
                   ),
-                ),
-                const SizedBox(height: 16),
-                _buildServicoDropdown(),
-                const SizedBox(height: 16),
-                // buildDateField(context),
-                _buildDateSlotField(context),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomButtomWidget(
-                    buttonChild: Text(
-                      'Confirmar Agendamento',
-                      style: boldFont(
-                        MColors.primaryWhite,
-                        16.0,
-                      ),
-                    ),
-                    onPressed: () => _confirmarAgendamento(context),
-                    color: MColors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+                ],
+              ),
       ),
     );
   }
@@ -262,10 +277,14 @@ class _AgendamentosScreenState
                 controller.dataController.text =
                     DateFormat('dd/MM/yyyy').format(pickedDate);
 
-                controller.availableTimeSlots =
-                    controller.getAvailableTimeSlots(pickedDate);
-
+                // Limpa o slot selecionado
                 controller.selectedTimeSlot = null;
+              });
+
+              List<String> availableSlots =
+                  await controller.getAvailableTimeSlots(pickedDate);
+              setState(() {
+                controller.availableTimeSlots = availableSlots;
               });
             }
           },
@@ -533,8 +552,9 @@ class _AgendamentosScreenState
 
       // Salva o agendamento
       await controller.salvarAgendamento(agendamento, context);
-
       controller.clearAgendamentoFields();
+      controller.restoreInitialDateField();
+      setState(() {});
     } catch (e) {
       print(e);
     }
@@ -575,7 +595,6 @@ class _AgendamentosScreenState
               onPressed: () async {
                 final String motivo = motivoController.text.trim();
                 if (motivo.isEmpty) {
-                  // Exibe uma mensagem de erro se o motivo estiver vazio
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content: Text(
@@ -586,9 +605,12 @@ class _AgendamentosScreenState
 
                 Navigator.of(context).pop();
 
-                // await controller.excluirAgendamento(agendamento, motivo);
+                // Exclui o agendamento ou realiza a atualização
                 await controller.updateAgendamento(
                     agendamento.id!, agendamento, motivo);
+
+                // Recarrega os agendamentos após a exclusão
+                await controller.carregarAgendamentos();
               },
             ),
           ],

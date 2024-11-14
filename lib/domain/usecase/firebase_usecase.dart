@@ -54,6 +54,9 @@ abstract class FirebaseUsecase {
   Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
       DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
+
+  Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim);
 }
 
 @Injectable(as: FirebaseUsecase)
@@ -307,6 +310,17 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados() async {
     try {
       return await firestoreRepository.fetchServicosCadastrados();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim) async {
+    try {
+      return await firestoreRepository.listarAgendamentosCancelados(
+          inicio, fim);
     } catch (e) {
       rethrow;
     }

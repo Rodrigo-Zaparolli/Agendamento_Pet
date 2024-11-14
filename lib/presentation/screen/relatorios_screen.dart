@@ -23,6 +23,7 @@ class _RelatoriosScreenState
   List<Map<String, dynamic>> reportData = [];
 
   final List<String> reportOptions = [
+    'Agendamentos Cancelados',
     'Aniversários Clientes',
     'Aniversários Pet',
     'Novos Clientes',
@@ -169,6 +170,8 @@ class _RelatoriosScreenState
         return _buildServicosCadastradosReport();
       case 'Serviços Realizados':
         return _buildContarServicosRealizadosReport();
+      case 'Agendamentos Cancelados':
+        return _buildAgendamentosCanceladosReport();
 
       default:
         return const Center(child: Text('Relatório não implementado'));
@@ -218,6 +221,14 @@ class _RelatoriosScreenState
     );
   }
 
+  Widget _buildAgendamentosCanceladosReport() {
+    return _buildReport(
+      reportData,
+      ['Data Agendamento', 'Data Cancelamento', 'Nome Pet', 'Motivo Cancel.'],
+      ['data', 'cancelledAt', 'petNome', 'motivoCancel'],
+    );
+  }
+
   Widget _buildReport(List<Map<String, dynamic>> reportData,
       List<String> columns, List<String> dataKeys) {
     return SingleChildScrollView(
@@ -238,10 +249,24 @@ class _RelatoriosScreenState
           return DataRow(
             cells: dataKeys.map((key) {
               final value = item[key];
-              final displayValue = (key == 'nascimento' ||
-                      key == 'dtCadastro' && value is Timestamp)
-                  ? DateFormat('dd/MM/yyyy').format(value.toDate())
-                  : value?.toString() ?? 'N/A';
+              String displayValue = value?.toString() ?? 'N/A';
+
+              if (key == 'cancelledAt' || key == 'data' && value is Timestamp) {
+                displayValue =
+                    DateFormat('dd/MM/yyyy').format((value).toDate());
+              } else if ((key == 'nascimento' || key == 'dtCadastro') &&
+                  value is String) {
+                try {
+                  final date = DateTime.parse(value);
+                  displayValue = DateFormat('dd/MM/yyyy').format(date);
+                } catch (e) {
+                  displayValue = 'Data inválida';
+                }
+              } else if ((key == 'nascimento' || key == 'dtCadastro') &&
+                  value is Timestamp) {
+                displayValue =
+                    DateFormat('dd/MM/yyyy').format((value).toDate());
+              }
 
               return DataCell(Text(displayValue));
             }).toList(),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+
 part 'pet.g.dart';
 
 @JsonSerializable()
@@ -31,7 +32,13 @@ class Pet {
   });
 
   factory Pet.fromJson(Map<String, dynamic> json) => _$PetFromJson(json);
-  Map<String, dynamic> toJson() => _$PetToJson(this);
+
+  Map<String, dynamic> toJson() {
+    final json = _$PetToJson(this);
+    // Converter 'nascimento' para Timestamp antes de retornar
+    json['nascimento'] = Timestamp.fromDate(nascimento);
+    return json;
+  }
 
   factory Pet.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;

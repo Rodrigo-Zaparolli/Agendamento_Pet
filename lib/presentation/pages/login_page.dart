@@ -128,9 +128,12 @@ class _LoginPageState extends WidgetStateful<LoginPage, LoginController> {
                               width: 40.0,
                               child: RawMaterialButton(
                                 onPressed: controller.togglePasswordVisibility,
-                                child: Icon(controller.obscureText
-                                    ? Icons.visibility
-                                    : Icons.visibility_off),
+                                child: Icon(
+                                  controller.obscureText
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: MColors.blue,
+                                ),
                               ),
                             ),
                             textfieldBorder: 0.50,

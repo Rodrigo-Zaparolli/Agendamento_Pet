@@ -105,21 +105,11 @@ class _HomePageState extends WidgetStateful<HomePage, HomeController> {
                 actions: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.notifications,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
                     child: GestureDetector(
                       onTap: () => Navigator.of(context).pushNamed("/user"),
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         backgroundColor: Colors.white,
-                        child: Icon(Icons.person),
+                        child: Icon(Icons.person, color: MColors.blue),
                       ),
                     ),
                   ),

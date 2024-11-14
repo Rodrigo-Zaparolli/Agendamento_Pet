@@ -36,17 +36,15 @@ class _ResetPasswordPageState
                 padding: const EdgeInsets.only(top: 30.0),
                 alignment: AlignmentDirectional.topStart,
                 child: Text(
-                  "Esqueceu sua senha?",
+                  "Redefinir sua senha",
                   style: boldFont(MColors.textDark, 38.0),
                   textAlign: TextAlign.start,
                 ),
               ),
-
               const SizedBox(height: 10.0),
               Observer(
                 builder: (_) => showAlert(controller),
               ),
-
               const SizedBox(height: 10.0),
 
               //FORM
@@ -73,16 +71,11 @@ class _ResetPasswordPageState
                       obscureText: false,
                       enableSuggestions: true,
                       keyboardType: TextInputType.emailAddress,
-                      // ignore: prefer_const_literals_to_create_immutables
                       inputFormatters: [],
                       suffix: null,
                       textfieldBorder: 0.50,
                     ),
                     const SizedBox(height: 10.0),
-                    Text(
-                      "Enviaremos um link para redefinir sua senha para esse e-mail.",
-                      style: normalFont(MColors.blue, null),
-                    ),
                     const SizedBox(height: 20.0),
                     controller.isButtonDisabled == true
                         ? CustomButtomWidget(
@@ -100,7 +93,7 @@ class _ResetPasswordPageState
                             ),
                             onPressed: () => controller.isButtonDisabled
                                 ? null
-                                : controller.redefinir(context),
+                                : controller.redefinirSenha(context),
                             color: MColors.blue,
                           ),
                   ],

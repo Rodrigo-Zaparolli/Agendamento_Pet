@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Agendamento PetShop',
         theme: ThemeData(
-          useMaterial3: true,
+          useMaterial3: false,
         ),
         initialRoute: tela,
         navigatorKey: navigatorKey,

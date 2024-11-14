@@ -8,7 +8,7 @@ class Clientes {
   String id;
   String nome;
   String sexo;
-  DateTime dtCadastro;
+  DateTime dtCadastro; // Use DateTime here for convenience in the app
   DateTime nascimento;
   String endereco;
   String numero;
@@ -40,7 +40,11 @@ class Clientes {
   factory Clientes.fromJson(Map<String, dynamic> json) =>
       _$ClientesFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ClientesToJson(this);
+  Map<String, dynamic> toJson() {
+    return _$ClientesToJson(this)
+      ..['dtCadastro'] = Timestamp.fromDate(dtCadastro)
+      ..['nascimento'] = Timestamp.fromDate(nascimento);
+  }
 
   factory Clientes.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -48,12 +52,12 @@ class Clientes {
       id: doc.id,
       nome: data['nome'] ?? '',
       sexo: data['sexo'] ?? '',
-      dtCadastro: data['dtCadastro'] is String
-          ? DateTime.parse(data['dtCadastro'])
-          : (data['dtCadastro'] as Timestamp).toDate(),
-      nascimento: data['nascimento'] is String
-          ? DateTime.parse(data['nascimento'])
-          : (data['nascimento'] as Timestamp).toDate(),
+      dtCadastro: (data['dtCadastro'] is Timestamp)
+          ? (data['dtCadastro'] as Timestamp).toDate()
+          : DateTime.parse(data['dtCadastro']),
+      nascimento: (data['nascimento'] is Timestamp)
+          ? (data['nascimento'] as Timestamp).toDate()
+          : DateTime.parse(data['nascimento']),
       endereco: data['endereco'] ?? '',
       numero: data['numero'] ?? '',
       bairro: data['bairro'] ?? '',

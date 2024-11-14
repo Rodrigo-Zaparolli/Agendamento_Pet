@@ -45,7 +45,9 @@ class Agendamento {
       'peso': peso,
       'sexo': sexo,
       'data': Timestamp.fromDate(data),
-      'cancelledAt': cancelledAt?.toIso8601String(),
+      'cancelledAt': cancelledAt != null
+          ? Timestamp.fromDate(cancelledAt!)
+          : null, // Converte somente se não for null
       'hora': hora,
       'motivoCancel': motivoCancel,
       'servico': servico.toJson(),
@@ -62,11 +64,13 @@ class Agendamento {
       raca: data['raca'] ?? '',
       idade: data['idade'] ?? '',
       peso: data['peso'] ?? '',
-      cancelledAt: data['cancelledAt'] != null
-          ? DateTime.parse(data['cancelledAt'])
-          : null,
       sexo: data['sexo'] ?? '',
+      // Converte corretamente o Timestamp do Firestore para DateTime
       data: (data['data'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      // Verifica se o campo cancelledAt existe e se está presente
+      cancelledAt: data['cancelledAt'] != null
+          ? (data['cancelledAt'] as Timestamp).toDate()
+          : null,
       hora: data['hora'] ?? '',
       motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),
@@ -90,6 +94,10 @@ class Agendamento {
       motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),
       horariosOcupados: List<String>.from(data['horariosOcupados'] ?? []),
+      // Verifica e converte o cancelledAt, se presente
+      cancelledAt: data['cancelledAt'] != null
+          ? (data['cancelledAt'] as Timestamp).toDate()
+          : null,
     );
   }
 }

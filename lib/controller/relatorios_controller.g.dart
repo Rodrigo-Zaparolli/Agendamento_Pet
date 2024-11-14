@@ -92,6 +92,24 @@ mixin _$RelatoriosController on _RelatoriosControllerBase, Store {
     });
   }
 
+  late final _$agendamentosCanceladosAtom = Atom(
+      name: '_RelatoriosControllerBase.agendamentosCancelados',
+      context: context);
+
+  @override
+  ObservableList<Agendamento> get agendamentosCancelados {
+    _$agendamentosCanceladosAtom.reportRead();
+    return super.agendamentosCancelados;
+  }
+
+  @override
+  set agendamentosCancelados(ObservableList<Agendamento> value) {
+    _$agendamentosCanceladosAtom
+        .reportWrite(value, super.agendamentosCancelados, () {
+      super.agendamentosCancelados = value;
+    });
+  }
+
   late final _$aniversariosPetsAtom = Atom(
       name: '_RelatoriosControllerBase.aniversariosPets', context: context);
 
@@ -258,6 +276,7 @@ servicosRealizados: ${servicosRealizados},
 clienteComMaisAgendamentos: ${clienteComMaisAgendamentos},
 aniversariosClientes: ${aniversariosClientes},
 agendamentos: ${agendamentos},
+agendamentosCancelados: ${agendamentosCancelados},
 aniversariosPets: ${aniversariosPets},
 servicosPorTipo: ${servicosPorTipo},
 clientesCadastrados: ${clientesCadastrados},

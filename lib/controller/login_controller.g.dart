@@ -9,6 +9,22 @@ part of 'login_controller.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$LoginController on _LoginControllerBase, Store {
+  late final _$novaSenhaAtom =
+      Atom(name: '_LoginControllerBase.novaSenha', context: context);
+
+  @override
+  String get novaSenha {
+    _$novaSenhaAtom.reportRead();
+    return super.novaSenha;
+  }
+
+  @override
+  set novaSenha(String value) {
+    _$novaSenhaAtom.reportWrite(value, super.novaSenha, () {
+      super.novaSenha = value;
+    });
+  }
+
   late final _$emailAtom =
       Atom(name: '_LoginControllerBase.email', context: context);
 
@@ -249,6 +265,14 @@ mixin _$LoginController on _LoginControllerBase, Store {
     return _$logoutAsyncAction.run(() => super.logout(context));
   }
 
+  late final _$redefinirSenhaAsyncAction =
+      AsyncAction('_LoginControllerBase.redefinirSenha', context: context);
+
+  @override
+  Future<void> redefinirSenha(BuildContext context) {
+    return _$redefinirSenhaAsyncAction.run(() => super.redefinirSenha(context));
+  }
+
   late final _$_LoginControllerBaseActionController =
       ActionController(name: '_LoginControllerBase', context: context);
 
@@ -308,8 +332,20 @@ mixin _$LoginController on _LoginControllerBase, Store {
   }
 
   @override
+  String? validateSenha(String? val) {
+    final _$actionInfo = _$_LoginControllerBaseActionController.startAction(
+        name: '_LoginControllerBase.validateSenha');
+    try {
+      return super.validateSenha(val);
+    } finally {
+      _$_LoginControllerBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
+novaSenha: ${novaSenha},
 email: ${email},
 password: ${password},
 name: ${name},

@@ -55,6 +55,9 @@ abstract class FirestoreRepository {
   Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
       DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
+
+  Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim);
 }
 
 @Injectable(as: FirestoreRepository)
@@ -242,35 +245,25 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
             .where('motivoCancel', isEqualTo: "")
             .get();
       } else {
-        // Usuários não-gerentes acessam apenas seus próprios agendamentos
         snapshot = await firestore
             .collection('agendamentos')
             .where('userId', isEqualTo: userId)
-            .where('motivoCancel',
-                isEqualTo: "") // Filtra agendamentos com motivoCancel vazio
+            .where('motivoCancel', isEqualTo: "")
             .get();
       }
 
       List<Agendamento> agendamentos =
           snapshot.docs.map((doc) => Agendamento.fromDocument(doc)).toList();
 
-      // Cria um formatador de hora para garantir o formato correto
-      final timeFormat = DateFormat("HH:mm");
-
-      // Ordena os agendamentos por data e hora
       agendamentos.sort((a, b) {
         int dateComparison = a.data.compareTo(b.data);
 
         if (dateComparison == 0) {
           try {
-            DateTime horaA = timeFormat.parse(a.hora);
-            DateTime horaB = timeFormat.parse(b.hora);
+            DateTime horaA = DateFormat("HH:mm").parse(a.hora);
+            DateTime horaB = DateFormat("HH:mm").parse(b.hora);
 
-            // Ajusta a data para comparação
-            DateTime dateTimeA = DateTime(1970, 1, 1, horaA.hour, horaA.minute);
-            DateTime dateTimeB = DateTime(1970, 1, 1, horaB.hour, horaB.minute);
-
-            return dateTimeA.compareTo(dateTimeB);
+            return horaA.compareTo(horaB);
           } catch (e) {
             print("Erro ao comparar horas: $e");
             return 0;
@@ -448,10 +441,12 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
   @override
   Future<List<Map<String, dynamic>>> listarNovosClientes(
       DateTime inicio, DateTime fim) async {
+    final startTimestamp = Timestamp.fromDate(inicio);
+    final endTimestamp = Timestamp.fromDate(fim);
     final querySnapshot = await firestore
         .collection('clientes')
-        .where('dtCadastro', isGreaterThanOrEqualTo: inicio)
-        .where('dtCadastro', isLessThanOrEqualTo: fim)
+        .where('dtCadastro', isGreaterThanOrEqualTo: startTimestamp)
+        .where('dtCadastro', isLessThanOrEqualTo: endTimestamp)
         .get();
 
     return querySnapshot.docs.map((doc) => doc.data()).toList();
@@ -517,11 +512,19 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
 
     final aniversariantes = querySnapshot.docs
         .where((doc) {
-          final Timestamp nascimentoTimestamp = doc['nascimento'];
-          final DateTime nascimento = nascimentoTimestamp.toDate();
+          final nascimento = doc['nascimento'];
 
-          final int mesNascimento = nascimento.month;
-          final int diaNascimento = nascimento.day;
+          DateTime nascimentoDate;
+          if (nascimento is String) {
+            nascimentoDate = DateTime.parse(nascimento);
+          } else if (nascimento is Timestamp) {
+            nascimentoDate = nascimento.toDate();
+          } else {
+            return false;
+          }
+
+          final int mesNascimento = nascimentoDate.month;
+          final int diaNascimento = nascimentoDate.day;
 
           return (mesNascimento > mesInicio ||
                   (mesNascimento == mesInicio && diaNascimento >= diaInicio)) &&
@@ -534,7 +537,6 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     return aniversariantes;
   }
 
-  // Função para buscar aniversários de pets em uma data específica
   @override
   Future<List<Map<String, dynamic>>> aniversariosPets(
       DateTime inicio, DateTime fim) async {
@@ -547,11 +549,19 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
 
     final aniversariantes = querySnapshot.docs
         .where((doc) {
-          final Timestamp nascimentoTimestamp = doc['nascimento'];
-          final DateTime nascimento = nascimentoTimestamp.toDate();
+          final nascimento = doc['nascimento'];
 
-          final int mesNascimento = nascimento.month;
-          final int diaNascimento = nascimento.day;
+          DateTime nascimentoDate;
+          if (nascimento is String) {
+            nascimentoDate = DateTime.parse(nascimento);
+          } else if (nascimento is Timestamp) {
+            nascimentoDate = nascimento.toDate();
+          } else {
+            return false;
+          }
+
+          final int mesNascimento = nascimentoDate.month;
+          final int diaNascimento = nascimentoDate.day;
 
           return (mesNascimento > mesInicio ||
                   (mesNascimento == mesInicio && diaNascimento >= diaInicio)) &&
@@ -564,7 +574,6 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     return aniversariantes;
   }
 
-  // Função para gerar relatório de serviço por tipo de serviço
   @override
   Future<Map<String, int>> relatorioServicosPorTipo(
       DateTime inicio, DateTime fim) async {
@@ -622,5 +631,27 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim) async {
+    final inicioAjustado =
+        DateTime(inicio.year, inicio.month, inicio.day, 0, 0, 0, 0);
+
+    final fimAjustado = DateTime(fim.year, fim.month, fim.day, 23, 59, 59, 999);
+
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('agendamentos')
+        .where('cancelledAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(inicioAjustado))
+        .where('cancelledAt',
+            isLessThanOrEqualTo: Timestamp.fromDate(fimAjustado))
+        .where('motivoCancel', isNotEqualTo: '')
+        .get();
+
+    return querySnapshot.docs.map((doc) {
+      return Agendamento.fromMap(doc.data());
+    }).toList();
   }
 }

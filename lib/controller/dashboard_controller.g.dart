@@ -572,14 +572,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       required String tipoPet,
       required String raca,
       required String porte,
-      required String tutor}) {
+      required String tutor,
+      required DateTime dataNascimentoPet}) {
     return _$cadastrarPetAsyncAction.run(() => super.cadastrarPet(
         context: context,
         sexo: sexo,
         tipoPet: tipoPet,
         raca: raca,
         porte: porte,
-        tutor: tutor));
+        tutor: tutor,
+        dataNascimentoPet: dataNascimentoPet));
   }
 
   late final _$carregarAgendamentosAsyncAction = AsyncAction(
@@ -600,6 +602,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   Future<void> carregarAgendamentosCancelados() {
     return _$carregarAgendamentosCanceladosAsyncAction
         .run(() => super.carregarAgendamentosCancelados());
+  }
+
+  late final _$getAvailableTimeSlotsAsyncAction = AsyncAction(
+      '_DashboardControllerBase.getAvailableTimeSlots',
+      context: context);
+
+  @override
+  Future<List<String>> getAvailableTimeSlots(DateTime selectedDate) {
+    return _$getAvailableTimeSlotsAsyncAction
+        .run(() => super.getAvailableTimeSlots(selectedDate));
   }
 
   late final _$salvarAgendamentoAsyncAction = AsyncAction(
@@ -716,17 +728,6 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
         name: '_DashboardControllerBase.calcularIdade');
     try {
       return super.calcularIdade(dataNascimento);
-    } finally {
-      _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
-  List<String> getAvailableTimeSlots(DateTime selectedDate) {
-    final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
-        name: '_DashboardControllerBase.getAvailableTimeSlots');
-    try {
-      return super.getAvailableTimeSlots(selectedDate);
     } finally {
       _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
     }

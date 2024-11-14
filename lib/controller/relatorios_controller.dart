@@ -32,6 +32,10 @@ abstract class _RelatoriosControllerBase with Store {
   ObservableList<Agendamento> agendamentos = ObservableList<Agendamento>();
 
   @observable
+  ObservableList<Agendamento> agendamentosCancelados =
+      ObservableList<Agendamento>();
+
+  @observable
   ObservableList<Map<String, dynamic>> aniversariosPets = ObservableList.of([]);
 
   @observable
@@ -69,12 +73,12 @@ abstract class _RelatoriosControllerBase with Store {
     }
   }
 
-  // Método para processar o relatório específico
   Future<List<Map<String, dynamic>>> _generateSpecificReport(
       String reportType, String period) async {
     DateTime startDate;
     DateTime endDate;
 
+    // Configurando o intervalo de datas com base no período selecionado
     if (period == 'Dia') {
       startDate = DateTime.now();
       endDate = DateTime.now();
@@ -95,13 +99,13 @@ abstract class _RelatoriosControllerBase with Store {
       throw Exception('Período desconhecido');
     }
 
-    // Variável para armazenar os dados do relatório
     List<Map<String, dynamic>> reportData = [];
 
+    // Selecionando a função apropriada com base no tipo de relatório
     switch (reportType) {
       case 'Novos Clientes':
         reportData = await fetchNovosClientes(startDate, endDate);
-
+        break;
       case 'Aniversários Clientes':
         reportData = await fetchAniversariosClientes(startDate, endDate);
         break;
@@ -117,11 +121,14 @@ abstract class _RelatoriosControllerBase with Store {
       case 'Serviços Realizados':
         reportData = await fetchServicosRealizados(startDate, endDate);
         break;
+      case 'Agendamentos Cancelados':
+        // Busca os agendamentos cancelados dentro do intervalo de datas
+        reportData = await fetchAgendamentosCancelados(startDate, endDate);
+        break;
       default:
         throw Exception('Relatório desconhecido');
     }
 
-    // Retorne os dados processados
     return reportData;
   }
 
@@ -211,6 +218,18 @@ abstract class _RelatoriosControllerBase with Store {
       print("Erro ao buscar clientes cadastrados: $e");
       return [];
     }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAgendamentosCancelados(
+      DateTime startDate, DateTime endDate) async {
+    List<Agendamento> agendamentos =
+        await firebaseUsecase.listarAgendamentosCancelados(startDate, endDate);
+
+    // Converte cada Agendamento em Map<String, dynamic>
+    List<Map<String, dynamic>> agendamentosMap =
+        agendamentos.map((agendamento) => agendamento.toJson()).toList();
+
+    return agendamentosMap;
   }
 
   // Formatação da data

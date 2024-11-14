@@ -32,12 +32,17 @@ abstract class _LoginControllerBase with Store {
   final ctrlEmail = TextEditingController();
   final ctrlPhone = TextEditingController();
   final ctrlRole = TextEditingController();
+  final ctrlNovaSenha = TextEditingController();
 
   // Chaves
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
 
   // Variáveis de Estado
+
+  @observable
+  String novaSenha = "";
+
   @observable
   String? email;
 
@@ -244,6 +249,19 @@ abstract class _LoginControllerBase with Store {
     ctrlRole.text = await sHandler.readPreferences("role");
   }
 
+  @action
+  String? validateSenha(String? val) {
+    String pattern = r'(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])';
+    RegExp regex = RegExp(pattern);
+    if (val == null || val.isEmpty) {
+      return "Informe a senha";
+    } else if (val.length < 6 || !regex.hasMatch(val)) {
+      return "Sua senha não é forte o suficiente!";
+    } else {
+      return null;
+    }
+  }
+
   // Função para redefinir a senha
   @action
   Future<void> redefinir(BuildContext context) async {
@@ -265,5 +283,29 @@ abstract class _LoginControllerBase with Store {
     await _auth.signOut();
     await sHandler.clearPreferences();
     Navigator.of(context).pushNamedAndRemoveUntil("/index", (route) => false);
+  }
+
+  @action
+  Future<void> redefinirSenha(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: ctrlEmail.text);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('E-mail de redefinição enviado'),
+          content: const Text(
+              'Um link para redefinir sua senha foi enviado para o seu e-mail.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context)
+                  .pushNamedAndRemoveUntil("/login", (route) => true),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      error = e.toString();
+    }
   }
 }

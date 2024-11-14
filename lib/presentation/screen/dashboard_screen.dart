@@ -331,7 +331,7 @@ class _DashboardScreenState
                       itemCount: controller.pets.length,
                       itemBuilder: (context, index) {
                         final pets = controller.pets[index];
-                        final clients = controller.clients[index];
+                        // final clients = controller.clients[index];
                         return GestureDetector(
                           child: ListTile(
                             leading: pets.raca == "Cão"
@@ -340,7 +340,7 @@ class _DashboardScreenState
                             title: Text(pets.nome),
                             subtitle: Text(
                               "${pets.tipo} - ${pets.raca}\n"
-                              "Tutor: ${clients.nome}",
+                              "Tutor: ${pets.tutor}",
                               softWrap: true,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,

@@ -29,7 +29,7 @@ class IndexPage extends StatelessWidget {
                   padding: const EdgeInsets.all(20.0),
                   child: Image.asset(
                     "assets/images/petshop.png",
-                    height: 375,
+                    height: 300,
                   ),
                 ),
                 const SizedBox(height: 30.0),

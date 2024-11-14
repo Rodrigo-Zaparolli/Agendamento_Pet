@@ -321,6 +321,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
           ),
           onPressed: () async {
             if (_formKey.currentState?.validate() ?? false) {
+              DateTime? dataNascimentoPet = DateFormat('dd/MM/yyyy')
+                  .parse(controller.nascimentoPetController.text, true);
               await controller.cadastrarPet(
                 context: context,
                 sexo: controller.sexoSelecionado,
@@ -328,6 +330,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                 porte: controller.porteSelecionado,
                 raca: controller.racaSelecionada,
                 tutor: controller.tutorSelecionado,
+                dataNascimentoPet: dataNascimentoPet,
               );
               controller.clearFields();
             }

@@ -332,6 +332,7 @@ abstract class _DashboardControllerBase with Store {
     required String sexo,
     required DateTime dataNascimento,
   }) async {
+    isLoading = true;
     print("Iniciando cadastro de cliente...");
 
     if (!_validateFields()) {
@@ -386,10 +387,12 @@ abstract class _DashboardControllerBase with Store {
       await dHelper.showSuccessDialog(
           context, "Cadastro realizado com sucesso!");
       await fetchClients();
+      isLoading = false;
     } catch (e) {
       print("Erro ao cadastrar cliente: $e");
       errorMessage = e.toString();
       await dHelper.showErrorDialog(context, errorMessage);
+      isLoading = false;
     }
   }
 
@@ -601,7 +604,6 @@ abstract class _DashboardControllerBase with Store {
     idadePetController.clear();
     pesoPetController.clear();
 
-    // Limpar os observables
     racaSelecionada = 'Escolha';
     porteSelecionado = 'Escolha';
     tipoPetSelecionado = 'Escolha';
@@ -610,7 +612,6 @@ abstract class _DashboardControllerBase with Store {
   }
 
   void clearAgendamentoFields() {
-    // Após confirmar, limpar os campos
     racaPetController.clear();
     nomePetController.clear();
     idadePetController.clear();
@@ -618,6 +619,13 @@ abstract class _DashboardControllerBase with Store {
     selectedSexo = 'Escolha';
     selectedServico = null;
     selectedDate = null;
+    selectedTimeSlot = null;
+  }
+
+  void restoreInitialDateField() {
+    final initialDate = DateTime.now();
+    selectedDate = initialDate;
+    dataController.text = "dd/MM/yyyy";
     selectedTimeSlot = null;
   }
 
@@ -682,7 +690,9 @@ abstract class _DashboardControllerBase with Store {
     required String raca,
     required String porte,
     required String tutor,
+    required DateTime dataNascimentoPet,
   }) async {
+    isLoadingPet = true;
     if (!_validatePetFields(raca, tipoPet, sexo, porte, tutor)) return;
 
     try {
@@ -729,7 +739,7 @@ abstract class _DashboardControllerBase with Store {
         nome: nomePetController.text,
         raca: raca,
         porte: porte,
-        nascimento: dataNascimento!,
+        nascimento: dataNascimentoPet,
         idade: idadePetController.text,
         peso: pesoPetController.text,
         sexo: sexo,
@@ -752,10 +762,12 @@ abstract class _DashboardControllerBase with Store {
 
       // Resetar o estado de atualização
       isUpdatePet = false;
+      isLoadingPet = false;
       petIdToUpdate = "";
     } catch (e) {
       print("Erro ao cadastrar pet: $e");
       errorMessage = e.toString();
+      isLoadingPet = false;
     }
   }
 
@@ -800,6 +812,7 @@ abstract class _DashboardControllerBase with Store {
   // Carregar Agendamentos
   @action
   Future<void> carregarAgendamentos() async {
+    isLoading = true;
     List<Agendamento> fetchedAgendamentos =
         await firebaseUsecase.fetchAgendamentos();
 
@@ -810,6 +823,7 @@ abstract class _DashboardControllerBase with Store {
     agendamentosMes = agendamentos.where((a) => isThisMonth(a.data)).length;
 
     // Contagem dos agendamentos cancelados no mês
+    isLoading = false;
   }
 
   @action
@@ -836,83 +850,79 @@ abstract class _DashboardControllerBase with Store {
   }
 
   @action
-  List<String> getAvailableTimeSlots(DateTime selectedDate) {
-    // Filtra os agendamentos do dia selecionado
-    final agendamentosDoDia = agendamentos
-        .where((a) =>
-            DateFormat('dd/MM/yyyy').format(a.data) ==
-            DateFormat('dd/MM/yyyy').format(selectedDate))
-        .toList();
+  Future<List<String>> getAvailableTimeSlots(DateTime selectedDate) async {
+    try {
+      // Busca agendamentos no Firestore para a data selecionada
+      final agendamentosDoDia = await firebaseUsecase.fetchAgendamentos(
+          paraVerificacaoConflito: true);
 
-    List<String> availableSlots = [];
+      // Filtra apenas os agendamentos do dia especificado
+      final agendamentosParaData = agendamentosDoDia.where((a) {
+        return DateFormat('dd/MM/yyyy').format(a.data) ==
+            DateFormat('dd/MM/yyyy').format(selectedDate);
+      }).toList();
 
-    // Loop pelas horas disponíveis (exceto 12h)
-    for (int hour = 8; hour < 18; hour++) {
-      if (hour == 12) continue; // Ignora o horário de 12h
+      List<String> availableSlots = [];
 
-      String currentHour = '$hour:00';
-      String nextHour = '${hour + 1}:00';
+      // Percorre todos os time slots
+      for (String slot in timeSlots) {
+        DateTime slotStart = DateFormat("HH:mm").parse(slot);
+        DateTime slotEnd = slotStart.add(const Duration(hours: 1));
 
-      // Verifica se o horário atual ou o próximo estão ocupados
-      bool isOccupied = agendamentosDoDia.any((agendamento) {
-        // Marca horários como ocupados se já foram agendados
-        return agendamento.hora == currentHour ||
-            agendamento.hora == nextHour ||
-            agendamento.horariosOcupados.contains(currentHour) ||
-            agendamento.horariosOcupados.contains(nextHour);
-      });
+        // Verifica se o slot está ocupado com base nos agendamentos existentes
+        bool isOccupied = agendamentosParaData.any((agendamento) {
+          DateTime agendamentoHoraInicio =
+              DateFormat("HH:mm").parse(agendamento.hora);
+          DateTime agendamentoHoraFim = agendamentoHoraInicio
+              .add(Duration(hours: agendamento.servico.duracao ~/ 60));
 
-      // Adiciona o horário se não estiver ocupado
-      if (!isOccupied) {
-        availableSlots.add(currentHour);
+          // Confirma se o slot atual se sobrepõe a algum agendamento existente
+          return (slotStart.isBefore(agendamentoHoraFim) &&
+              slotEnd.isAfter(agendamentoHoraInicio));
+        });
+
+        // Se não estiver ocupado, adiciona à lista de slots disponíveis
+        if (!isOccupied) {
+          availableSlots.add(slot);
+        }
       }
-    }
 
-    // Remove horários baseados na duração do serviço
-    if (selectedServico?.duracao == 120) {
-      availableSlots.removeWhere((slot) {
-        final hourPart = int.parse(slot.split(':')[0]);
-        // Remove o horário atual e o próximo, se for um serviço de 120 minutos
-        return slot == '$hourPart:00' ||
-            availableSlots.contains('${hourPart + 1}:00');
-      });
+      return availableSlots;
+    } catch (e) {
+      print("Erro ao buscar horários disponíveis: $e");
+      return [];
     }
-
-    return availableSlots;
   }
 
   @action
   Future<void> salvarAgendamento(
       Agendamento agendamento, BuildContext context) async {
     try {
-      // 1. Busca todos os agendamentos para verificar conflitos
+      isLoading = true;
+
+      // Busca todos os agendamentos para verificação de conflitos
       final agendamentosExistentes = await firebaseUsecase.fetchAgendamentos(
           paraVerificacaoConflito: true);
 
-      // Formata a hora do agendamento para ter sempre dois dígitos
-      String formattedHoraAgendamento = agendamento.hora.padLeft(5, '0');
-      DateTime horaAgendamento =
-          DateTime.parse('1970-01-01 $formattedHoraAgendamento');
+      DateTime horaAgendamentoInicio =
+          DateFormat("HH:mm").parse(agendamento.hora);
+      DateTime horaAgendamentoFim = horaAgendamentoInicio
+          .add(Duration(hours: agendamento.servico.duracao ~/ 60));
 
-      // 2. Verifica se há conflitos de horário
-      bool existeAgendamentoNoMesmoHorario = agendamentosExistentes.any((a) {
-        String formattedHoraExistente = a.hora.padLeft(5, '0');
-        DateTime horaExistente =
-            DateTime.parse('1970-01-01 $formattedHoraExistente');
-
+      bool existeConflito = agendamentosExistentes.any((a) {
         if (a.data.isSameDay(agendamento.data)) {
-          if (a.servico.duracao == 120) {
-            return horaExistente.hour == horaAgendamento.hour ||
-                horaExistente.hour == horaAgendamento.hour + 1;
-          } else {
-            return horaExistente.hour == horaAgendamento.hour;
-          }
+          DateTime horaExistenteInicio = DateFormat("HH:mm").parse(a.hora);
+          DateTime horaExistenteFim =
+              horaExistenteInicio.add(Duration(hours: a.servico.duracao ~/ 60));
+
+          // Verifica conflito de horários
+          return horaAgendamentoInicio.isBefore(horaExistenteFim) &&
+              horaAgendamentoFim.isAfter(horaExistenteInicio);
         }
         return false;
       });
 
-      // 3. Exibe alerta se houver conflito
-      if (existeAgendamentoNoMesmoHorario) {
+      if (existeConflito) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -926,17 +936,18 @@ abstract class _DashboardControllerBase with Store {
             ],
           ),
         );
-        return; // Interrompe o fluxo caso haja conflito
+        isLoading = false;
+        return;
       }
 
-      // 4. Salva o agendamento se não houver conflito
       agendamento.id = DateTime.now().millisecondsSinceEpoch.toString();
 
+      // Adiciona os horários ocupados de acordo com a duração do serviço
+      agendamento.horariosOcupados
+          .add(DateFormat("HH:mm").format(horaAgendamentoInicio));
       if (agendamento.servico.duracao == 120) {
-        agendamento.horariosOcupados.add(formattedHoraAgendamento);
-        agendamento.horariosOcupados.add('${horaAgendamento.hour + 1}:00');
-      } else {
-        agendamento.horariosOcupados.add(formattedHoraAgendamento);
+        agendamento.horariosOcupados
+            .add('${horaAgendamentoInicio.hour + 1}:00');
       }
 
       await firebaseUsecase.addAgendamento(
@@ -961,6 +972,7 @@ abstract class _DashboardControllerBase with Store {
           ],
         ),
       );
+      isLoading = false;
     } catch (e) {
       print("Erro ao salvar agendamento: $e");
       showDialog(
@@ -976,6 +988,7 @@ abstract class _DashboardControllerBase with Store {
           ],
         ),
       );
+      isLoading = false;
       rethrow;
     }
   }
