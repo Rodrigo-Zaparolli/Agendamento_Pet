@@ -24,6 +24,7 @@ class _RelatoriosScreenState
 
   final List<String> reportOptions = [
     'Agendamentos Cancelados',
+    'Agendamentos Realizados',
     'Aniversários Clientes',
     'Aniversários Pet',
     'Novos Clientes',
@@ -172,6 +173,8 @@ class _RelatoriosScreenState
         return _buildContarServicosRealizadosReport();
       case 'Agendamentos Cancelados':
         return _buildAgendamentosCanceladosReport();
+      case 'Agendamentos Realizados':
+        return _buildAgendamentosRealizadosReport();
 
       default:
         return const Center(child: Text('Relatório não implementado'));
@@ -226,6 +229,14 @@ class _RelatoriosScreenState
       reportData,
       ['Data Agendamento', 'Data Cancelamento', 'Nome Pet', 'Motivo Cancel.'],
       ['data', 'cancelledAt', 'petNome', 'motivoCancel'],
+    );
+  }
+
+    Widget _buildAgendamentosRealizadosReport() {
+    return _buildReport(
+      reportData,
+      ['Data Agendamento', 'Nome Pet'],
+      ['data', 'petNome'],
     );
   }
 
