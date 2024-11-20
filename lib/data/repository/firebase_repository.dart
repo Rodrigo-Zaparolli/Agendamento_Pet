@@ -33,6 +33,7 @@ abstract class FirestoreRepository {
   Future<void> updateAgendamento(
       String agendamentoId, Agendamento agendamento, String motivo);
   Future<List<Agendamento>> fetchAgendamentosCancelados();
+  Future<void> atualizarStatusRealizado(Agendamento agendamento);
 
   // Serviços
   Future<void> addServico(Servico servico);
@@ -57,6 +58,9 @@ abstract class FirestoreRepository {
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
 
   Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim);
+
+  Future<List<Agendamento>> listarAgendamentosRealizados(
       DateTime inicio, DateTime fim);
 }
 
@@ -231,6 +235,17 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
   }
 
   @override
+  Future<void> atualizarStatusRealizado(Agendamento agendamento) async {
+    try {
+      await firestore.collection('agendamentos').doc(agendamento.id).update({
+        'isRealizado': agendamento.isRealizado,
+      });
+    } catch (e) {
+      print("Erro ao atualizar o status de realizado: $e");
+    }
+  }
+
+  @override
   Future<List<Agendamento>> fetchAgendamentos(
       {bool paraVerificacaoConflito = false}) async {
     try {
@@ -243,12 +258,14 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
         snapshot = await firestore
             .collection('agendamentos')
             .where('motivoCancel', isEqualTo: "")
+            .where('isRealizado', isEqualTo: false)
             .get();
       } else {
         snapshot = await firestore
             .collection('agendamentos')
             .where('userId', isEqualTo: userId)
             .where('motivoCancel', isEqualTo: "")
+            .where('isRealizado', isEqualTo: false)
             .get();
       }
 
@@ -652,6 +669,36 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
 
     return querySnapshot.docs.map((doc) {
       return Agendamento.fromMap(doc.data());
+    }).toList();
+  }
+
+  @override
+  Future<List<Agendamento>> listarAgendamentosRealizados(
+      DateTime inicio, DateTime fim) async {
+    final inicioAjustado =
+        DateTime(inicio.year, inicio.month, inicio.day, 0, 0, 0, 0);
+    final fimAjustado = DateTime(fim.year, fim.month, fim.day, 23, 59, 59, 999);
+
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('agendamentos')
+        .where('data',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(inicioAjustado))
+        .where('data', isLessThanOrEqualTo: Timestamp.fromDate(fimAjustado))
+        .where('motivoCancel', isEqualTo: "")
+        .get();
+
+    return querySnapshot.docs.map((doc) {
+      final data = doc.data();
+
+      // Garante que o campo `servico` é tratado como um Map e cria um objeto Servico
+      final servicoData = data['servico'] as Map<String, dynamic>? ?? {};
+      final servico = Servico.fromMap(servicoData);
+
+      // Cria o Agendamento utilizando o método fromMap
+      return Agendamento.fromMap({
+        ...data,
+        'servico': servico.toJson(), // Adiciona o serviço processado ao mapa
+      });
     }).toList();
   }
 }

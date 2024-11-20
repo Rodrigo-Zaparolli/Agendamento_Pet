@@ -122,8 +122,10 @@ abstract class _RelatoriosControllerBase with Store {
         reportData = await fetchServicosRealizados(startDate, endDate);
         break;
       case 'Agendamentos Cancelados':
-        // Busca os agendamentos cancelados dentro do intervalo de datas
         reportData = await fetchAgendamentosCancelados(startDate, endDate);
+        break;
+      case 'Agendamentos Realizados':
+        reportData = await fetchAgendamentosRealizados(startDate, endDate);
         break;
       default:
         throw Exception('Relatório desconhecido');
@@ -224,6 +226,18 @@ abstract class _RelatoriosControllerBase with Store {
       DateTime startDate, DateTime endDate) async {
     List<Agendamento> agendamentos =
         await firebaseUsecase.listarAgendamentosCancelados(startDate, endDate);
+
+    // Converte cada Agendamento em Map<String, dynamic>
+    List<Map<String, dynamic>> agendamentosMap =
+        agendamentos.map((agendamento) => agendamento.toJson()).toList();
+
+    return agendamentosMap;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAgendamentosRealizados(
+      DateTime startDate, DateTime endDate) async {
+    List<Agendamento> agendamentos =
+        await firebaseUsecase.listarAgendamentosRealizados(startDate, endDate);
 
     // Converte cada Agendamento em Map<String, dynamic>
     List<Map<String, dynamic>> agendamentosMap =

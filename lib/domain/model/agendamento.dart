@@ -12,6 +12,7 @@ class Agendamento {
   String sexo;
   DateTime data;
   DateTime? cancelledAt;
+  bool isRealizado;
   String hora;
   String motivoCancel;
   Servico servico;
@@ -30,6 +31,7 @@ class Agendamento {
     this.cancelledAt,
     required this.hora,
     required this.motivoCancel,
+    required this.isRealizado,
     required this.servico,
     List<String>? horariosOcupados,
   }) : horariosOcupados = horariosOcupados ?? [];
@@ -45,9 +47,9 @@ class Agendamento {
       'peso': peso,
       'sexo': sexo,
       'data': Timestamp.fromDate(data),
-      'cancelledAt': cancelledAt != null
-          ? Timestamp.fromDate(cancelledAt!)
-          : null, // Converte somente se não for null
+      'cancelledAt':
+          cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null,
+      'isRealizado': isRealizado,
       'hora': hora,
       'motivoCancel': motivoCancel,
       'servico': servico.toJson(),
@@ -65,12 +67,11 @@ class Agendamento {
       idade: data['idade'] ?? '',
       peso: data['peso'] ?? '',
       sexo: data['sexo'] ?? '',
-      // Converte corretamente o Timestamp do Firestore para DateTime
       data: (data['data'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      // Verifica se o campo cancelledAt existe e se está presente
       cancelledAt: data['cancelledAt'] != null
           ? (data['cancelledAt'] as Timestamp).toDate()
           : null,
+      isRealizado: data['isRealizado'] ?? false,
       hora: data['hora'] ?? '',
       motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),
@@ -90,6 +91,7 @@ class Agendamento {
       peso: data['peso'] ?? '',
       sexo: data['sexo'] ?? '',
       data: (data['data'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isRealizado: data['isRealizado'] ?? false,
       hora: data['hora'] ?? '',
       motivoCancel: data['motivoCancel'] ?? '',
       servico: Servico.fromMap(data['servico'] ?? {}),

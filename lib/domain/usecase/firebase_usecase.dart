@@ -32,6 +32,7 @@ abstract class FirebaseUsecase {
   Future<void> updateAgendamento(
       String agendamentoId, Agendamento agendamento, String motivo);
   Future<List<Agendamento>> fetchAgendamentosCancelados();
+  Future<void> atualizarStatusRealizado(Agendamento agendamento);
 
   // Serviços
   Future<void> addServico(Servico servico);
@@ -56,6 +57,9 @@ abstract class FirebaseUsecase {
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
 
   Future<List<Agendamento>> listarAgendamentosCancelados(
+      DateTime inicio, DateTime fim);
+
+  Future<List<Agendamento>> listarAgendamentosRealizados(
       DateTime inicio, DateTime fim);
 }
 
@@ -208,6 +212,15 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
     }
   }
 
+  @override
+  Future<void> atualizarStatusRealizado(Agendamento agendamento) async {
+    try {
+      await firestoreRepository.atualizarStatusRealizado(agendamento);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Serviços
   @override
   Future<void> addServico(Servico servico) async {
@@ -320,6 +333,17 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
       DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.listarAgendamentosCancelados(
+          inicio, fim);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Agendamento>> listarAgendamentosRealizados(
+      DateTime inicio, DateTime fim) async {
+    try {
+      return await firestoreRepository.listarAgendamentosRealizados(
           inicio, fim);
     } catch (e) {
       rethrow;

@@ -67,8 +67,8 @@ class _RelatoriosScreenState
   // Função para resetar os campos quando uma nova opção for selecionada
   void _resetFields() {
     setState(() {
-      selectedPeriod = null; // Reseta o período
-      reportData = []; // Limpa os dados do relatório
+      selectedPeriod = null;
+      reportData = [];
     });
   }
 
@@ -232,11 +232,20 @@ class _RelatoriosScreenState
     );
   }
 
-    Widget _buildAgendamentosRealizadosReport() {
+  Widget _buildAgendamentosRealizadosReport() {
+    // Ajustar os dados para incluir o nome do serviço no campo esperado
+    final adjustedReportData = reportData.map((agendamento) {
+      return {
+        ...agendamento,
+        'servico': agendamento['servico']?['nome'] ??
+            'Não informado', // Pega o nome do serviço
+      };
+    }).toList();
+
     return _buildReport(
-      reportData,
-      ['Data Agendamento', 'Nome Pet'],
-      ['data', 'petNome'],
+      adjustedReportData,
+      ['Data Agendamento', 'Nome Pet', 'Horário', 'Serviço'],
+      ['data', 'petNome', 'hora', 'servico'],
     );
   }
 

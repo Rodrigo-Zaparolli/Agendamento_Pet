@@ -17,9 +17,22 @@ class Servico {
     required this.duracao,
   });
 
+  // Método estático para retornar um Servico vazio
+  static Servico empty() {
+    return Servico(
+      id: '',
+      tipo: '',
+      porte: '',
+      nome: '',
+      preco: 0.0,
+      duracao: 0,
+    );
+  }
+
   // Converter para JSON para salvar no Firestore
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'tipo': tipo,
       'porte': porte,
       'nome': nome,
@@ -45,8 +58,8 @@ class Servico {
     final data = doc.data() as Map<String, dynamic>;
     return Servico(
       id: doc.id,
-      tipo: data['tipo'],
-      porte: data['porte'],
+      tipo: data['tipo'] ?? '',
+      porte: data['porte'] ?? '',
       nome: data['nome'] ?? '',
       preco: (data['preco'] ?? 0).toDouble(),
       duracao: (data['duracao'] ?? 0).toInt(),

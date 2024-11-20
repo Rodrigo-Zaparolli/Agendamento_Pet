@@ -225,23 +225,15 @@ class _ServicosScreenState
                         itemBuilder: (context, index) {
                           final servico = controller.servico[index];
                           return ListTile(
-                            title: Text(
-                              servico.nome,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                            title: Text(servico.nome),
+                              subtitle: Text(
+                                'Preço: R\$ ${servico.preco} / '
+                                'Duração: ${servico.duracao} minutos'
+                                'Tipo: ${servico.tipo} / ' // Exibe o tipo do serviço
+                                'Porte: ${servico.porte} ' // Exibe o porte do serviço
                             ),
-                            subtitle: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Preço: R\$ ${servico.preco}'),
-                                Text('Duração: ${servico.duracao} min.'),
-                                Text(
-                                    'Tipo: ${servico.tipo}'), // Exibe o tipo do serviço
-                                Text(
-                                    'Porte: ${servico.porte}'), // Exibe o porte do serviço
-                              ],
-                            ),
+                            
+
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

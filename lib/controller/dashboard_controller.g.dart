@@ -158,13 +158,13 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       Atom(name: '_DashboardControllerBase.pets', context: context);
 
   @override
-  List<Pet> get pets {
+  ObservableList<Pet> get pets {
     _$petsAtom.reportRead();
     return super.pets;
   }
 
   @override
-  set pets(List<Pet> value) {
+  set pets(ObservableList<Pet> value) {
     _$petsAtom.reportWrite(value, super.pets, () {
       super.pets = value;
     });
@@ -327,6 +327,22 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
   set currentClientUserId(String? value) {
     _$currentClientUserIdAtom.reportWrite(value, super.currentClientUserId, () {
       super.currentClientUserId = value;
+    });
+  }
+
+  late final _$roleAtom =
+      Atom(name: '_DashboardControllerBase.role', context: context);
+
+  @override
+  String get role {
+    _$roleAtom.reportRead();
+    return super.role;
+  }
+
+  @override
+  set role(String value) {
+    _$roleAtom.reportWrite(value, super.role, () {
+      super.role = value;
     });
   }
 
@@ -646,6 +662,16 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
         .run(() => super.updateAgendamento(agendamentoId, agendamento, motivo));
   }
 
+  late final _$atualizarStatusRealizadoAsyncAction = AsyncAction(
+      '_DashboardControllerBase.atualizarStatusRealizado',
+      context: context);
+
+  @override
+  Future<void> atualizarStatusRealizado(Agendamento agendamento) {
+    return _$atualizarStatusRealizadoAsyncAction
+        .run(() => super.atualizarStatusRealizado(agendamento));
+  }
+
   late final _$searchAgendamentosAsyncAction = AsyncAction(
       '_DashboardControllerBase.searchAgendamentos',
       context: context);
@@ -756,6 +782,7 @@ isTimeSlotEnabled: ${isTimeSlotEnabled},
 isUpdateClient: ${isUpdateClient},
 isUpdatePet: ${isUpdatePet},
 currentClientUserId: ${currentClientUserId},
+role: ${role},
 currentClientId: ${currentClientId},
 racasSelecionadas: ${racasSelecionadas},
 errorMessage: ${errorMessage},

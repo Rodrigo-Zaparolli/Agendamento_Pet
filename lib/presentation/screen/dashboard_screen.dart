@@ -231,9 +231,10 @@ class _DashboardScreenState
                           leading: Icon(Icons.person, color: MColors.blue),
                           title: Text(client.nome),
                           subtitle: Text(
-                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(client.nascimento)}\n'
-                              'Telefone: ${client.telefone}\n'
-                              'Cidade: ${client.cidade} - ${client.uf}'),
+                            'Email: ${client.email} / '
+                            'Telefone: ${client.telefone} / '
+                            'Cidade: ${client.cidade} - ${client.uf} / '
+                            'Nascimento: ${DateFormat('dd/MM/yyyy').format(client.nascimento)} '),
                           onTap: () {},
                         );
                       },
@@ -339,7 +340,7 @@ class _DashboardScreenState
                                 : Icon(MdiIcons.dog, color: MColors.blue),
                             title: Text(pets.nome),
                             subtitle: Text(
-                              "${pets.tipo} - ${pets.raca}\n"
+                              "${pets.tipo} - ${pets.raca} / "
                               "Tutor: ${pets.tutor}",
                               softWrap: true,
                               maxLines: 2,

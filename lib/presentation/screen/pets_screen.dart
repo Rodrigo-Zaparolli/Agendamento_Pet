@@ -197,8 +197,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
             onChanged: (value) {
               controller.tipoPetSelecionado = value ?? 'Escolha';
               controller.porteSelecionado = 'Escolha';
-              racasSelecionadas = []; // Limpar raças ao mudar o tipo
-              controller.racaSelecionada = 'Escolha'; // Resetar a raça
+              racasSelecionadas = [];
+              controller.racaSelecionada = 'Escolha';
             },
             validator: (value) {
               if (value == null || value == 'Escolha') {
@@ -403,11 +403,11 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                           return ListTile(
                             title: Text(pets.nome),
                             subtitle: Text(
-                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(pets.nascimento)}\n'
-                              'Raça: ${pets.raca}\n'
-                              'Peso: ${pets.peso}\n'
-                              'Porte: ${pets.porte}\n'
-                              'Tutor: ${pets.tutor}\n',
+                              'Nascimento: ${DateFormat('dd/MM/yyyy').format(pets.nascimento)} / '
+                              'Raça: ${pets.raca} / '
+                              'Peso: ${pets.peso} / '
+                              'Porte: ${pets.porte} / '
+                              'Tutor: ${pets.tutor} ',
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,

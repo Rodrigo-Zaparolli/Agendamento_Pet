@@ -11,6 +11,7 @@ class Clientes {
   DateTime dtCadastro; // Use DateTime here for convenience in the app
   DateTime nascimento;
   String endereco;
+  String email;
   String numero;
   String bairro;
   String cep;
@@ -27,6 +28,7 @@ class Clientes {
     required this.dtCadastro,
     required this.nascimento,
     required this.endereco,
+    required this.email,
     required this.numero,
     required this.bairro,
     required this.cep,
@@ -59,6 +61,7 @@ class Clientes {
           ? (data['nascimento'] as Timestamp).toDate()
           : DateTime.parse(data['nascimento']),
       endereco: data['endereco'] ?? '',
+      email: data['email'] ?? '',
       numero: data['numero'] ?? '',
       bairro: data['bairro'] ?? '',
       cep: data['cep'] ?? '',

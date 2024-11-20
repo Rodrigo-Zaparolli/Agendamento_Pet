@@ -2,6 +2,7 @@
 
 // ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api, unnecessary_null_comparison
 
+import 'package:agendamento_pet/constants/app_shared_preferences.dart';
 import 'package:agendamento_pet/constants/dialog_helper.dart';
 import 'package:agendamento_pet/domain/model/agendamento.dart';
 import 'package:agendamento_pet/domain/model/clientes.dart';
@@ -37,6 +38,7 @@ abstract class _DashboardControllerBase with Store {
   final TextEditingController dataNascimentoController =
       TextEditingController();
   final TextEditingController enderecoController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController numeroController = TextEditingController();
   final TextEditingController bairroController = TextEditingController();
   final TextEditingController cidadeController = TextEditingController();
@@ -70,6 +72,7 @@ abstract class _DashboardControllerBase with Store {
       TextEditingController();
 
   final dHelper = DialogHelper();
+  final sHandler = AppSharedPreferences();
 
   @observable
   String sexoSelecionado = 'Escolha';
@@ -99,7 +102,7 @@ abstract class _DashboardControllerBase with Store {
   ObservableList<Clientes> clients = ObservableList<Clientes>();
 
   @observable
-  List<Pet> pets = [];
+  ObservableList<Pet> pets = ObservableList.of([]);
 
   @observable
   ObservableList<Agendamento> agendamentos = ObservableList<Agendamento>();
@@ -130,6 +133,9 @@ abstract class _DashboardControllerBase with Store {
 
   @observable
   String? currentClientUserId;
+
+  @observable
+  String role = "";
 
   @observable
   String? currentClientId;
@@ -169,6 +175,10 @@ abstract class _DashboardControllerBase with Store {
   DateTime? dataNascimento;
 
   List<String> occupiedSlots = [];
+
+  List<String> slotsDisponiveis = [];
+
+  List<String> horariosOcupados = [];
 
   final List<String> timeSlots = [
     '08:00',
@@ -312,12 +322,15 @@ abstract class _DashboardControllerBase with Store {
     ],
   };
 
-  List<String> slotsDisponiveis = [];
-  List<String> horariosOcupados = [];
-
   String get currentUserId {
     final User? user = _firebaseAuth.currentUser;
     return user?.uid ?? '';
+  }
+
+  getUserDetails() async {
+    isLoading = true;
+    role = await sHandler.readPreferences("role");
+    isLoading = false;
   }
 
   final maskFormatter = MaskTextInputFormatter(
@@ -369,6 +382,7 @@ abstract class _DashboardControllerBase with Store {
         dtCadastro: DateTime.now(),
         nascimento: dataNascimento,
         endereco: enderecoController.text,
+        email: emailController.text,
         numero: numeroController.text,
         bairro: bairroController.text,
         cep: cepController.text,
@@ -405,6 +419,7 @@ abstract class _DashboardControllerBase with Store {
     cidadeController.text = clients.cidade;
     estadoController.text = clients.uf;
     enderecoController.text = clients.endereco;
+    emailController.text = clients.email;
     numeroController.text = clients.numero;
     complementoController.text = clients.complemento;
     bairroController.text = clients.bairro;
@@ -591,6 +606,7 @@ abstract class _DashboardControllerBase with Store {
     dataNascimentoController.clear();
     cepController.clear();
     enderecoController.clear();
+    emailController.clear();
     numeroController.clear();
     bairroController.clear();
     cidadeController.clear();
@@ -633,6 +649,7 @@ abstract class _DashboardControllerBase with Store {
     if (nomeController.text.isEmpty ||
         dataNascimentoController.text.isEmpty ||
         enderecoController.text.isEmpty ||
+        emailController.text.isEmpty ||
         numeroController.text.isEmpty ||
         bairroController.text.isEmpty ||
         cidadeController.text.isEmpty ||
@@ -668,11 +685,14 @@ abstract class _DashboardControllerBase with Store {
 
   void atualizarRacas() {
     // Atualiza as raças com base no tipo de pet e no porte selecionado
-    if (porteSelecionado == 'Pequeno') {
+    if (porteSelecionado == 'Pequeno' ||
+        porteSelecionado == 'Pequeno, de 2 a 4 kg') {
       racasSelecionadas = portePequeno[tipoPetSelecionado] ?? [];
-    } else if (porteSelecionado == 'Médio') {
+    } else if (porteSelecionado == 'Médio' ||
+        porteSelecionado == 'Médio, de 4 a 6 kg') {
       racasSelecionadas = porteMedio[tipoPetSelecionado] ?? [];
-    } else if (porteSelecionado == 'Grande') {
+    } else if (porteSelecionado == 'Grande' ||
+        porteSelecionado == 'Grande, acima de 6 kg') {
       racasSelecionadas = porteGrande[tipoPetSelecionado] ?? [];
     }
 
@@ -1017,6 +1037,20 @@ abstract class _DashboardControllerBase with Store {
       print('Agendamento atualizado com sucesso.');
     } catch (e) {
       print('Erro ao atualizar agendamento: $e');
+      rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> atualizarStatusRealizado(Agendamento agendamento) async {
+    isLoading = true;
+    try {
+      await firebaseUsecase.atualizarStatusRealizado(agendamento);
+      print('Agendamento Realizado com sucesso.');
+    } catch (e) {
+      print('Erro ao realizar agendamento: $e');
       rethrow;
     } finally {
       isLoading = false;

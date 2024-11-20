@@ -25,6 +25,7 @@ class _AgendamentosScreenState
     extends WidgetStateful<AgendamentosScreen, DashboardController> {
   @override
   void initState() {
+    controller.getUserDetails();
     controller.fetchPets();
     controller.carregarAgendamentos();
     controller.fecthServico();
@@ -103,28 +104,67 @@ class _AgendamentosScreenState
                     }
 
                     return Expanded(
-                      child: ListView.builder(
-                        itemCount: controller.agendamentos.length,
-                        itemBuilder: (context, index) {
-                          final agendamento = controller.agendamentos[index];
-                          return ListTile(
-                            title: Text(agendamento.petNome),
-                            subtitle: Text(
-                              'Raça: ${agendamento.raca}, '
-                              'Idade: ${agendamento.idade} anos, '
-                              'Peso: ${agendamento.peso} kg\n'
-                              'serviço: ${agendamento.servico.nome}\n'
-                              'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.data)} '
-                              'Hora: ${agendamento.hora}',
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                _confirmarExclusao(context, agendamento);
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: controller.agendamentos.length,
+                              itemBuilder: (context, index) {
+                                final agendamento =
+                                    controller.agendamentos[index];
+
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Card(
+                                    elevation: 2,
+                                    child: ListTile(
+                                      title: Text(agendamento.petNome),
+                                      subtitle: Text(
+                                        'Raça: ${agendamento.raca}, / '
+                                        'Idade: ${agendamento.idade} anos, / '
+                                        'Peso: ${agendamento.peso} kg, / '
+                                        'Serviço: ${agendamento.servico.nome} / '
+                                        'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.data)} / '
+                                        'Hora: ${agendamento.hora}',
+                                      ),
+                                      leading: controller.role == 'manager'
+                                          ? SizedBox(
+                                              width: 50,
+                                              height: 50,
+                                              child: Checkbox(
+                                                focusColor: MColors.teal,
+                                                hoverColor: MColors.teal,
+                                                value: agendamento.isRealizado,
+                                                onChanged: (bool? value) {
+                                                  setState(() {
+                                                    agendamento.isRealizado =
+                                                        value ?? false;
+                                                  });
+                                                  controller
+                                                      .atualizarStatusRealizado(
+                                                          agendamento);
+                                                  controller
+                                                      .carregarAgendamentos();
+                                                },
+                                              ),
+                                            )
+                                          : Container(),
+                                      trailing: IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.red),
+                                        onPressed: () {
+                                          _confirmarExclusao(
+                                              context, agendamento);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
                               },
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -548,6 +588,7 @@ class _AgendamentosScreenState
         petId: controller.selectedPet!.clientId,
         userId: userId,
         motivoCancel: '',
+        isRealizado: false,
       );
 
       // Salva o agendamento
