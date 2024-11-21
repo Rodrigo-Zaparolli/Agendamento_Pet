@@ -71,7 +71,7 @@ class _ResetPasswordPageState
                       obscureText: false,
                       enableSuggestions: true,
                       keyboardType: TextInputType.emailAddress,
-                      inputFormatters: [],
+                      inputFormatters: const [],
                       suffix: null,
                       textfieldBorder: 0.50,
                     ),

@@ -674,10 +674,14 @@ abstract class _DashboardControllerBase with Store {
     // Atualizar os TextEditingController com os valores do pet
     nomePetController.text = pet.nome;
     nascimentoPetController.text =
-        DateFormat("dd/MM/yyyy").format(dataNascimento!);
-    ;
+        DateFormat("dd/MM/yyyy").format(pet.nascimento);
+
+    calcularIdadePet(DateFormat("dd/MM/yyyy").format(pet.nascimento));
+
     idadePetController.text = pet.idade;
     pesoPetController.text = pet.peso;
+
+    petIdToUpdate = pet.id!;
 
     // Atualizar as raças com base no tipo e porte
     atualizarRacas();
@@ -699,6 +703,38 @@ abstract class _DashboardControllerBase with Store {
     // Se a raça selecionada não estiver na nova lista, redefine para 'Escolha'
     if (!racasSelecionadas.contains(racaSelecionada)) {
       racaSelecionada = 'Escolha';
+    }
+  }
+
+  void calcularIdadePet(String? data) {
+    if (data != null && data.isNotEmpty) {
+      final DateTime nascimento = DateFormat('dd/MM/yyyy').parse(data);
+      final DateTime agora = DateTime.now();
+
+      int idadeAnos = agora.year - nascimento.year;
+      int idadeMeses = agora.month - nascimento.month;
+      int idadeDias = agora.day - nascimento.day;
+
+      if (idadeMeses < 0 || (idadeMeses == 0 && idadeDias < 0)) {
+        idadeAnos--;
+        idadeMeses += 12;
+      }
+
+      int totalMeses = idadeAnos * 12 + idadeMeses;
+
+      if (totalMeses == 0) {
+        idadePetController.text = 'menos de um mês';
+      } else if (idadeAnos == 0) {
+        idadePetController.text = '$totalMeses meses';
+      } else {
+        idadePetController.text = '$idadeAnos anos e $idadeMeses meses';
+      }
+
+      double idadeDecimal = totalMeses / 12.0;
+      idadeDecimalPetController.text = idadeDecimal.toStringAsFixed(1);
+    } else {
+      idadePetController.clear();
+      idadeDecimalPetController.clear();
     }
   }
 

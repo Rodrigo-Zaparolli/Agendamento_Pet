@@ -25,6 +25,22 @@ mixin _$RelatoriosController on _RelatoriosControllerBase, Store {
     });
   }
 
+  late final _$novosPetsAtom =
+      Atom(name: '_RelatoriosControllerBase.novosPets', context: context);
+
+  @override
+  int get novosPets {
+    _$novosPetsAtom.reportRead();
+    return super.novosPets;
+  }
+
+  @override
+  set novosPets(int value) {
+    _$novosPetsAtom.reportWrite(value, super.novosPets, () {
+      super.novosPets = value;
+    });
+  }
+
   late final _$servicosRealizadosAtom = Atom(
       name: '_RelatoriosControllerBase.servicosRealizados', context: context);
 
@@ -158,6 +174,22 @@ mixin _$RelatoriosController on _RelatoriosControllerBase, Store {
     });
   }
 
+  late final _$petsCadastradosAtom =
+      Atom(name: '_RelatoriosControllerBase.petsCadastrados', context: context);
+
+  @override
+  ObservableList<Map<String, dynamic>> get petsCadastrados {
+    _$petsCadastradosAtom.reportRead();
+    return super.petsCadastrados;
+  }
+
+  @override
+  set petsCadastrados(ObservableList<Map<String, dynamic>> value) {
+    _$petsCadastradosAtom.reportWrite(value, super.petsCadastrados, () {
+      super.petsCadastrados = value;
+    });
+  }
+
   late final _$servicosCadastradosAtom = Atom(
       name: '_RelatoriosControllerBase.servicosCadastrados', context: context);
 
@@ -214,6 +246,16 @@ mixin _$RelatoriosController on _RelatoriosControllerBase, Store {
         .run(() => super.fetchNovosClientes(inicio, fim));
   }
 
+  late final _$fetchNovosPetsAsyncAction =
+      AsyncAction('_RelatoriosControllerBase.fetchNovosPets', context: context);
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchNovosPets(
+      DateTime inicio, DateTime fim) {
+    return _$fetchNovosPetsAsyncAction
+        .run(() => super.fetchNovosPets(inicio, fim));
+  }
+
   late final _$fetchServicosRealizadosAsyncAction = AsyncAction(
       '_RelatoriosControllerBase.fetchServicosRealizados',
       context: context);
@@ -268,10 +310,22 @@ mixin _$RelatoriosController on _RelatoriosControllerBase, Store {
         .run(() => super.fetchClientesCadastrados(inicio, fim));
   }
 
+  late final _$fetchPetsCadastradosAsyncAction = AsyncAction(
+      '_RelatoriosControllerBase.fetchPetsCadastrados',
+      context: context);
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(
+      DateTime inicio, DateTime fim) {
+    return _$fetchPetsCadastradosAsyncAction
+        .run(() => super.fetchPetsCadastrados(inicio, fim));
+  }
+
   @override
   String toString() {
     return '''
 novosClientes: ${novosClientes},
+novosPets: ${novosPets},
 servicosRealizados: ${servicosRealizados},
 clienteComMaisAgendamentos: ${clienteComMaisAgendamentos},
 aniversariosClientes: ${aniversariosClientes},
@@ -280,6 +334,7 @@ agendamentosCancelados: ${agendamentosCancelados},
 aniversariosPets: ${aniversariosPets},
 servicosPorTipo: ${servicosPorTipo},
 clientesCadastrados: ${clientesCadastrados},
+petsCadastrados: ${petsCadastrados},
 servicosCadastrados: ${servicosCadastrados}
     ''';
   }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:agendamento_pet/controller/dashboard_controller.dart';
 import 'package:agendamento_pet/core/utils/all_widgets.dart';
 import 'package:agendamento_pet/core/utils/colors.dart';
@@ -35,40 +37,6 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
 
   List<String> racasSelecionadas = [];
 
-  void calcularIdade(String? data) {
-    if (data != null && data.isNotEmpty) {
-      final DateTime nascimento = DateFormat('dd/MM/yyyy').parse(data);
-      final DateTime agora = DateTime.now();
-
-      int idadeAnos = agora.year - nascimento.year;
-      int idadeMeses = agora.month - nascimento.month;
-      int idadeDias = agora.day - nascimento.day;
-
-      if (idadeMeses < 0 || (idadeMeses == 0 && idadeDias < 0)) {
-        idadeAnos--;
-        idadeMeses += 12;
-      }
-
-      int totalMeses = idadeAnos * 12 + idadeMeses;
-
-      if (totalMeses == 0) {
-        controller.idadePetController.text = 'menos de um mês';
-      } else if (idadeAnos == 0) {
-        controller.idadePetController.text = '$totalMeses meses';
-      } else {
-        controller.idadePetController.text =
-            '$idadeAnos anos e $idadeMeses meses';
-      }
-
-      double idadeDecimal = totalMeses / 12.0;
-      controller.idadeDecimalPetController.text =
-          idadeDecimal.toStringAsFixed(1);
-    } else {
-      controller.idadePetController.clear();
-      controller.idadeDecimalPetController.clear();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,42 +47,52 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
             color: MColors.cian,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
+              child: Column(
                 children: [
                   const SizedBox(width: 16),
-                  _buildPetsListSection(),
-                  Expanded(
-                    flex: 2,
-                    child: Card(
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: SingleChildScrollView(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                _buildTutorAndPetNameFields(),
-                                const SizedBox(height: 16),
-                                _buildPetTypeAndSizeFields(),
-                                const SizedBox(height: 16),
-                                _buildBirthDateAndAgeFields(),
-                                const SizedBox(height: 16),
-                                _buildWeightField(),
-                                const SizedBox(height: 32),
-                                _buildConfirmationButton(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildPetsListSection(context),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: MColors.blue,
+        onPressed: () => _showCadastroDialog(context),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  _showCadastroDialog(BuildContext ctx) {
+    final size = MediaQuery.of(context).size;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Cadastro do Pet",
+          style: boldFont(Colors.black, 20.0),
+        ),
+        content: SizedBox(
+          width: size.width * 0.7,
+          height: size.height * 0.7,
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildTutorAndPetNameFields(),
+                  const SizedBox(height: 16),
+                  _buildPetTypeAndSizeFields(),
+                  const SizedBox(height: 16),
+                  _buildBirthDateAndAgeFields(),
+                  const SizedBox(height: 16),
+                  _buildWeightField(),
+                  const SizedBox(height: 32),
+                  _buildConfirmationButton(context),
                 ],
               ),
             ),
@@ -129,24 +107,20 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Expanded(
-          child: Observer(
-            builder: (_) {
-              return buildDropdownField(
-                'Tutor:',
-                controller.clients.isEmpty
-                    ? ["Escolha"]
-                    : controller.clients.map((client) => client.nome).toList(),
-                value: controller.tutorSelecionado,
-                onChanged: (value) {
-                  controller.tutorSelecionado = value ?? 'Escolha';
-                },
-                validator: (value) {
-                  if (value == null || value == 'Escolha') {
-                    return 'Por favor, selecione o tutor';
-                  }
-                  return null;
-                },
-              );
+          child: buildDropdownField(
+            'Tutor:',
+            controller.clients.isEmpty
+                ? ["Escolha"]
+                : controller.clients.map((client) => client.nome).toList(),
+            value: controller.tutorSelecionado,
+            onChanged: (value) {
+              controller.tutorSelecionado = value ?? 'Escolha';
+            },
+            validator: (value) {
+              if (value == null || value == 'Escolha') {
+                return 'Por favor, selecione o tutor';
+              }
+              return null;
             },
           ),
         ),
@@ -310,7 +284,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     );
   }
 
-  Widget _buildConfirmationButton() {
+  Widget _buildConfirmationButton(BuildContext ctx) {
     return Center(
       child: SizedBox(
         width: 200,
@@ -332,6 +306,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                 tutor: controller.tutorSelecionado,
                 dataNascimentoPet: dataNascimentoPet,
               );
+              Navigator.pop(ctx);
               controller.clearFields();
             }
           },
@@ -341,7 +316,7 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
     );
   }
 
-  Widget _buildPetsListSection() {
+  Widget _buildPetsListSection(BuildContext ctx) {
     return Expanded(
       flex: 1,
       child: Padding(
@@ -418,7 +393,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                                   onPressed: () {
                                     controller.preencherCamposPet(pets);
                                     controller.isUpdatePet = true;
-                                    controller.petIdToUpdate = pets.id!;
+
+                                    _showCadastroDialog(ctx);
                                   },
                                 ),
                                 IconButton(
@@ -502,7 +478,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
                 dataNascimento = pickedDate;
                 controller.nascimentoPetController.text =
                     DateFormat('dd/MM/yyyy').format(dataNascimento!);
-                calcularIdade(controller.nascimentoPetController.text);
+                controller
+                    .calcularIdadePet(controller.nascimentoPetController.text);
               });
             }
           },

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:agendamento_pet/domain/model/agendamento.dart';
 import 'package:agendamento_pet/domain/model/clientes.dart';
 import 'package:agendamento_pet/domain/model/pet.dart';
@@ -44,6 +46,8 @@ abstract class FirestoreRepository {
   //Relatórios
   Future<List<Map<String, dynamic>>> listarNovosClientes(
       DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> listarNovosPets(
+      DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> contarServicosRealizados(
       DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> aniversariosClientes(
@@ -54,6 +58,8 @@ abstract class FirestoreRepository {
       DateTime inicio, DateTime fim);
 
   Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
+      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(
       DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
 
@@ -701,4 +707,7 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
       });
     }).toList();
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

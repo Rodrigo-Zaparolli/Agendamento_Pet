@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, library_private_types_in_public_api
+
 import 'package:agendamento_pet/domain/model/agendamento.dart';
 import 'package:agendamento_pet/domain/usecase/firebase_usecase.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +19,9 @@ abstract class _RelatoriosControllerBase with Store {
   // Stores to hold the data for the reports
   @observable
   int novosClientes = 0;
+
+  @observable
+  int novosPets = 0;
 
   @observable
   int servicosRealizados = 0;
@@ -43,6 +48,10 @@ abstract class _RelatoriosControllerBase with Store {
 
   @observable
   ObservableList<Map<String, dynamic>> clientesCadastrados =
+      ObservableList.of([]);
+
+  @observable
+  ObservableList<Map<String, dynamic>> petsCadastrados =
       ObservableList.of([]);
 
   @observable
@@ -106,10 +115,13 @@ abstract class _RelatoriosControllerBase with Store {
       case 'Novos Clientes':
         reportData = await fetchNovosClientes(startDate, endDate);
         break;
+      case 'Novos Pets':
+      reportData = await fetchNovosPets(startDate, endDate);
+      break;
       case 'Aniversários Clientes':
         reportData = await fetchAniversariosClientes(startDate, endDate);
         break;
-      case 'Aniversários Pet':
+      case 'Aniversários Pets':
         reportData = await fetchAniversariosPets(startDate, endDate);
         break;
       case 'Clientes Cadastrados':
@@ -161,6 +173,16 @@ abstract class _RelatoriosControllerBase with Store {
       return [];
     }
   }
+  @action
+  Future<List<Map<String, dynamic>>> fetchNovosPets(
+    DateTime inicio, DateTime fim) async {
+      try {
+        return await firebaseUsecase.listarNovosPets(inicio, fim);
+        } catch (e) {
+          print("Erro ao buscar novos pets: $e");
+          return [];
+          }
+          }
 
   @action
   Future<List<Map<String, dynamic>>> fetchServicosRealizados(
@@ -222,6 +244,17 @@ abstract class _RelatoriosControllerBase with Store {
     }
   }
 
+  @action
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(
+    DateTime inicio, DateTime fim) async {
+      try {
+        return await firebaseUsecase.fetchPetsCadastrados(inicio, fim);
+        } catch (e) {
+          print("Erro ao buscar pets cadastrados: $e");
+          return [];
+      }
+    }
+        
   Future<List<Map<String, dynamic>>> fetchAgendamentosCancelados(
       DateTime startDate, DateTime endDate) async {
     List<Agendamento> agendamentos =

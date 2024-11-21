@@ -13,7 +13,7 @@ abstract class FirebaseUsecase {
   Future<Usuario?> getUserDetails(String userId);
   Future<void> updateUserDetails(Usuario usuario);
 
-  //Clients
+  // Clients
   Future<List<Clientes>> fetchClients(String userId);
   Future<void> addClient(Clientes client, String userId);
   Future<void> deleteClient(Clientes client, String userId);
@@ -24,13 +24,10 @@ abstract class FirebaseUsecase {
   Future<void> deletePet(Pet pet);
 
   // Agendamentos
-  Future<void> addAgendamento(
-      Agendamento agendamento, String petId, String userId);
-  Future<List<Agendamento>> fetchAgendamentos(
-      {bool paraVerificacaoConflito = false});
+  Future<void> addAgendamento(Agendamento agendamento, String petId, String userId);
+  Future<List<Agendamento>> fetchAgendamentos({bool paraVerificacaoConflito = false});
   Future<void> deleteAgendamento(String agendamentoId);
-  Future<void> updateAgendamento(
-      String agendamentoId, Agendamento agendamento, String motivo);
+  Future<void> updateAgendamento(String agendamentoId, Agendamento agendamento, String motivo);
   Future<List<Agendamento>> fetchAgendamentosCancelados();
   Future<void> atualizarStatusRealizado(Agendamento agendamento);
 
@@ -41,26 +38,17 @@ abstract class FirebaseUsecase {
   Future<void> updateServico(String servicoId, Servico servico);
 
   // Relatórios
-  Future<List<Map<String, dynamic>>> listarNovosClientes(
-      DateTime inicio, DateTime fim);
-  Future<List<Map<String, dynamic>>> contarServicosRealizados(
-      DateTime inicio, DateTime fim);
-
-  Future<List<Map<String, dynamic>>> aniversariosClientes(
-      DateTime inicio, DateTime fim);
-  Future<List<Map<String, dynamic>>> aniversariosPets(
-      DateTime inicio, DateTime fim);
-  Future<Map<String, int>> relatorioServicosPorTipo(
-      DateTime inicio, DateTime fim);
-  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
-      DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> listarNovosClientes(DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> listarNovosPets(DateTime inicio, DateTime fim); // Método corrigido
+  Future<List<Map<String, dynamic>>> contarServicosRealizados(DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> aniversariosClientes(DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> aniversariosPets(DateTime inicio, DateTime fim);
+  Future<Map<String, int>> relatorioServicosPorTipo(DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(DateTime inicio, DateTime fim);
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(DateTime inicio, DateTime fim);
   Future<List<Map<String, dynamic>>> fetchServicosCadastrados();
-
-  Future<List<Agendamento>> listarAgendamentosCancelados(
-      DateTime inicio, DateTime fim);
-
-  Future<List<Agendamento>> listarAgendamentosRealizados(
-      DateTime inicio, DateTime fim);
+  Future<List<Agendamento>> listarAgendamentosCancelados(DateTime inicio, DateTime fim);
+  Future<List<Agendamento>> listarAgendamentosRealizados(DateTime inicio, DateTime fim);
 }
 
 @Injectable(as: FirebaseUsecase)
@@ -163,8 +151,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
 
   // Agendamentos
   @override
-  Future<void> addAgendamento(
-      Agendamento agendamento, String petId, String userId) async {
+  Future<void> addAgendamento(Agendamento agendamento, String petId, String userId) async {
     try {
       await firestoreRepository.addAgendamento(agendamento, petId);
     } catch (e) {
@@ -173,11 +160,9 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Agendamento>> fetchAgendamentos(
-      {bool paraVerificacaoConflito = false}) async {
+  Future<List<Agendamento>> fetchAgendamentos({bool paraVerificacaoConflito = false}) async {
     try {
-      return await firestoreRepository.fetchAgendamentos(
-          paraVerificacaoConflito: paraVerificacaoConflito);
+      return await firestoreRepository.fetchAgendamentos(paraVerificacaoConflito: paraVerificacaoConflito);
     } catch (e) {
       rethrow;
     }
@@ -202,11 +187,9 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<void> updateAgendamento(
-      String agendamentoId, Agendamento agendamento, String motivo) async {
+  Future<void> updateAgendamento(String agendamentoId, Agendamento agendamento, String motivo) async {
     try {
-      await firestoreRepository.updateAgendamento(
-          agendamentoId, agendamento, motivo);
+      await firestoreRepository.updateAgendamento(agendamentoId, agendamento, motivo);
     } catch (e) {
       rethrow;
     }
@@ -260,8 +243,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
 
   // Relatórios
   @override
-  Future<List<Map<String, dynamic>>> listarNovosClientes(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Map<String, dynamic>>> listarNovosClientes(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.listarNovosClientes(inicio, fim);
     } catch (e) {
@@ -269,9 +251,25 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
     }
   }
 
+@override
+Future<List<Map<String, dynamic>>> listarNovosPets(DateTime inicio, DateTime fim) async {
+  try {
+    // Chama o repositório para buscar os dados dos pets, provavelmente retornando uma lista de Map
+    final petsMaps = await firestoreRepository.fetchPetsCadastrados(inicio, fim);
+
+    // Convertendo a lista de Maps para uma lista de instâncias de Pet
+    return petsMaps.map((petMap) {
+      // Se petMap for um Map<String, dynamic>, converta para um objeto Pet
+      final pet = Pet.fromJson(petMap);
+      return pet.toJson();  // Agora, podemos chamar toJson no objeto Pet
+    }).toList();
+  } catch (e) {
+    rethrow;
+  }
+}
+
   @override
-  Future<List<Map<String, dynamic>>> contarServicosRealizados(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Map<String, dynamic>>> contarServicosRealizados(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.contarServicosRealizados(inicio, fim);
     } catch (e) {
@@ -280,8 +278,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> aniversariosClientes(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Map<String, dynamic>>> aniversariosClientes(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.aniversariosClientes(inicio, fim);
     } catch (e) {
@@ -290,8 +287,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> aniversariosPets(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Map<String, dynamic>>> aniversariosPets(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.aniversariosPets(inicio, fim);
     } catch (e) {
@@ -300,8 +296,7 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<Map<String, int>> relatorioServicosPorTipo(
-      DateTime inicio, DateTime fim) async {
+  Future<Map<String, int>> relatorioServicosPorTipo(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.relatorioServicosPorTipo(inicio, fim);
     } catch (e) {
@@ -310,10 +305,18 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Map<String, dynamic>>> fetchClientesCadastrados(DateTime inicio, DateTime fim) async {
     try {
       return await firestoreRepository.fetchClientesCadastrados(inicio, fim);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(DateTime inicio, DateTime fim) async {
+    try {
+      return await firestoreRepository.fetchPetsCadastrados(inicio, fim);
     } catch (e) {
       rethrow;
     }
@@ -329,22 +332,18 @@ class FirebaseUsecaseImpl implements FirebaseUsecase {
   }
 
   @override
-  Future<List<Agendamento>> listarAgendamentosCancelados(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Agendamento>> listarAgendamentosCancelados(DateTime inicio, DateTime fim) async {
     try {
-      return await firestoreRepository.listarAgendamentosCancelados(
-          inicio, fim);
+      return await firestoreRepository.listarAgendamentosCancelados(inicio, fim);
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<List<Agendamento>> listarAgendamentosRealizados(
-      DateTime inicio, DateTime fim) async {
+  Future<List<Agendamento>> listarAgendamentosRealizados(DateTime inicio, DateTime fim) async {
     try {
-      return await firestoreRepository.listarAgendamentosRealizados(
-          inicio, fim);
+      return await firestoreRepository.listarAgendamentosRealizados(inicio, fim);
     } catch (e) {
       rethrow;
     }

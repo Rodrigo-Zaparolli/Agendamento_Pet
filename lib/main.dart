@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       designSize: const Size(360, 690),
       builder: (context, child) => MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Agendamento PetShop',
+        title: '4 Patas PetShop',
         theme: ThemeData(
           useMaterial3: false,
         ),

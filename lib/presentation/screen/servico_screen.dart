@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -226,14 +228,11 @@ class _ServicosScreenState
                           final servico = controller.servico[index];
                           return ListTile(
                             title: Text(servico.nome),
-                              subtitle: Text(
-                                'Preço: R\$ ${servico.preco} / '
+                            subtitle: Text('Preço: R\$ ${servico.preco} / '
                                 'Duração: ${servico.duracao} minutos'
                                 'Tipo: ${servico.tipo} / ' // Exibe o tipo do serviço
                                 'Porte: ${servico.porte} ' // Exibe o porte do serviço
-                            ),
-                            
-
+                                ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'package:agendamento_pet/controller/dashboard_controller.dart';
 import 'package:agendamento_pet/core/utils/all_widgets.dart';
@@ -35,17 +35,120 @@ class _AgendamentosScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Observer(
-      builder: (_) => CustomContainerWidget(
-        color: MColors.cian,
-        child: Row(
-          children: [
-            _buildAgendamentoListSection(),
-            _buildAgendamentoFormSection(context),
-          ],
+      body: Observer(
+        builder: (_) => CustomContainerWidget(
+          color: MColors.cian,
+          child: Column(
+            children: [
+              _buildAgendamentoListSection(),
+            ],
+          ),
         ),
       ),
-    ));
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: MColors.blue,
+        onPressed: () => _showCadastroDialog(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  _showCadastroDialog() {
+    final size = MediaQuery.of(context).size;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+            "Agendamento de Serviço",
+            style: boldFont(Colors.black, 20.0),
+          ),
+          content: SizedBox(
+            width: size.width * 0.7,
+            height: size.height * 0.7,
+            child: SingleChildScrollView(
+              child: Observer(
+                builder: (_) => Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildPetDropdown(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: buildTextField('Raça:', 'Raça',
+                                    controller.racaPetController),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: buildTextField('Idade:', 'Idade do pet',
+                                    controller.idadePetController),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: buildTextField('Peso:', 'Peso do pet',
+                                    controller.pesoPetController),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Text('Sexo:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          DropdownButtonFormField<String>(
+                            value: controller.selectedSexo,
+                            items: ['Escolha', 'Macho', 'Fêmea']
+                                .map((label) => DropdownMenuItem(
+                                      value: label,
+                                      child: Text(label),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                controller.selectedSexo = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildServicoDropdown(),
+                          const SizedBox(height: 16),
+                          _buildDateSlotField(context),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: CustomButtomWidget(
+                              buttonChild: Text(
+                                'Confirmar Agendamento',
+                                style: boldFont(
+                                  MColors.primaryWhite,
+                                  16.0,
+                                ),
+                              ),
+                              onPressed: () async {
+                                await _confirmarAgendamento();
+                                Navigator.of(context).pop();
+                              },
+                              color: MColors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAgendamentoListSection() {
@@ -173,116 +276,6 @@ class _AgendamentosScreenState
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAgendamentoFormSection(BuildContext context) {
-    return Expanded(
-      flex: 2,
-      child: Observer(
-        builder: (_) => controller.isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: MColors.blue,
-                ),
-              )
-            : Stack(
-                children: [
-                  SingleChildScrollView(
-                    child: Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.all(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.pets, color: MColors.blue),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Agendamento',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: MColors.blue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            _buildPetDropdown(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: buildTextField('Raça:', 'Raça',
-                                      controller.racaPetController),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: buildTextField(
-                                      'Idade:',
-                                      'Idade do pet',
-                                      controller.idadePetController),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: buildTextField('Peso:', 'Peso do pet',
-                                      controller.pesoPetController),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            const Text('Sexo:',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            DropdownButtonFormField<String>(
-                              value: controller.selectedSexo,
-                              items: ['Escolha', 'Macho', 'Fêmea']
-                                  .map((label) => DropdownMenuItem(
-                                        value: label,
-                                        child: Text(label),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  controller.selectedSexo = value;
-                                });
-                              },
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildServicoDropdown(),
-                            const SizedBox(height: 16),
-                            _buildDateSlotField(context),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              child: CustomButtomWidget(
-                                buttonChild: Text(
-                                  'Confirmar Agendamento',
-                                  style: boldFont(
-                                    MColors.primaryWhite,
-                                    16.0,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  await _confirmarAgendamento(context);
-                                },
-                                color: MColors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
       ),
     );
   }
@@ -497,7 +490,6 @@ class _AgendamentosScreenState
 
             if (pickedDate != null) {
               controller.selectedDate = pickedDate;
-              print(controller.selectedDate);
 
               List<TimeOfDay> availableTimes = [];
               for (int hour = 8; hour <= 18; hour++) {
@@ -555,7 +547,7 @@ class _AgendamentosScreenState
     );
   }
 
-  Future<void> _confirmarAgendamento(BuildContext context) async {
+  Future<void> _confirmarAgendamento() async {
     try {
       if (controller.selectedPet == null ||
           controller.selectedServico == null) {
@@ -595,7 +587,10 @@ class _AgendamentosScreenState
       await controller.salvarAgendamento(agendamento, context);
       controller.clearAgendamentoFields();
       controller.restoreInitialDateField();
-      setState(() {});
+
+      setState(() {
+        Navigator.of(context).pop();
+      });
     } catch (e) {
       print(e);
     }

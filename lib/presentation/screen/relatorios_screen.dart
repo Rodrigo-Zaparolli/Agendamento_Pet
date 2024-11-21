@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:agendamento_pet/controller/relatorios_controller.dart';
@@ -7,6 +9,9 @@ import 'package:agendamento_pet/core/utils/widget_stateful.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_buttom_widget.dart';
 import 'package:agendamento_pet/presentation/widgets/custom_container_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class RelatoriosScreen extends StatefulWidget {
   const RelatoriosScreen({super.key});
@@ -26,8 +31,9 @@ class _RelatoriosScreenState
     'Agendamentos Cancelados',
     'Agendamentos Realizados',
     'Aniversários Clientes',
-    'Aniversários Pet',
+    'Aniversários Pets',
     'Novos Clientes',
+    'Novos Pets',
     'Serviços Cadastrados',
     'Serviços Realizados',
   ];
@@ -136,6 +142,15 @@ class _RelatoriosScreenState
                             : () {},
                     color: MColors.blue,
                   ),
+                  const SizedBox(height: 16),
+                  CustomButtomWidget(
+                    buttonChild: Text(
+                      'Exportar para PDF',
+                      style: boldFont(MColors.primaryWhite, 16.0),
+                    ),
+                    onPressed: reportData.isNotEmpty ? _exportToPdf : () {},
+                    color: MColors.blue,
+                  ),
                 ],
               ),
             ),
@@ -163,10 +178,12 @@ class _RelatoriosScreenState
     switch (selectedReport) {
       case 'Aniversários Clientes':
         return _buildClientBirthdayReport();
-      case 'Aniversários Pet':
+      case 'Aniversários Pets':
         return _buildPetBirthdayReport();
       case 'Novos Clientes':
         return _buildCadastroClienteReport();
+      case 'Novos Pets':
+        return _buildCadastroPetReport();
       case 'Serviços Cadastrados':
         return _buildServicosCadastradosReport();
       case 'Serviços Realizados':
@@ -207,6 +224,14 @@ class _RelatoriosScreenState
       ['nome', 'dtCadastro'],
     );
   }
+  //Pets Novos
+  Widget _buildCadastroPetReport() {
+    return _buildReport(
+      reportData,
+      ['Nome do Pet', 'Data do cadastro', 'Tutor'],
+      ['nome', 'dtCadastro', 'tutor'],
+    );
+  }
 
   Widget _buildServicosCadastradosReport() {
     return _buildReport(
@@ -219,7 +244,7 @@ class _RelatoriosScreenState
   Widget _buildContarServicosRealizadosReport() {
     return _buildReport(
       reportData,
-      ['Nome do Servico', 'Quantidade'],
+      ['Nome do Serviço', 'Quantidade'],
       ['servico', 'quantidade'],
     );
   }
@@ -227,8 +252,8 @@ class _RelatoriosScreenState
   Widget _buildAgendamentosCanceladosReport() {
     return _buildReport(
       reportData,
-      ['Data Agendamento', 'Data Cancelamento', 'Nome Pet', 'Motivo Cancel.'],
-      ['data', 'cancelledAt', 'petNome', 'motivoCancel'],
+      ['Data Agendamento', 'Data Cancelamento', 'Nome Pet', 'Tutor', 'Motivo Cancel.'],
+      ['data', 'cancelledAt', 'petNome', 'tutor', 'motivoCancel'],
     );
   }
 
@@ -237,15 +262,14 @@ class _RelatoriosScreenState
     final adjustedReportData = reportData.map((agendamento) {
       return {
         ...agendamento,
-        'servico': agendamento['servico']?['nome'] ??
-            'Não informado', // Pega o nome do serviço
+        'servico': agendamento['servico']?['nome'] ?? 'Não informado',
       };
     }).toList();
 
     return _buildReport(
       adjustedReportData,
-      ['Data Agendamento', 'Nome Pet', 'Horário', 'Serviço'],
-      ['data', 'petNome', 'hora', 'servico'],
+      ['Data Agendamento', 'Nome Pet', 'Tutor', 'Horário', 'Serviço'],
+      ['data', 'petNome', 'tutor', 'hora', 'servico'],
     );
   }
 
@@ -300,4 +324,159 @@ class _RelatoriosScreenState
   void dispose() {
     super.dispose();
   }
+
+  List<String> _getReportHeaders() {
+    switch (selectedReport) {
+      case 'Aniversários Clientes':
+        return ['Nome do Cliente', 'Data de Nascimento', 'Telefone'];
+      case 'Aniversários Pets':
+        return ['Nome do Pet', 'Data de Nascimento', 'Idade', 'Tutor'];
+      case 'Novos Clientes':
+        return ['Nome do Cliente', 'Data do Cadastro'];
+      case 'Novos Pets':
+        return ['Nome do Pet', 'Data do Cadastro'];
+      case 'Serviços Cadastrados':
+        return ['Nome do Serviço', 'Pet', 'Porte', 'Duração'];
+      case 'Serviços Realizados':
+        return ['Nome do Serviço', 'Quantidade'];
+      case 'Agendamentos Cancelados':
+        return [
+          'Data Agendamento',
+          'Data Cancelamento',
+          'Nome do Pet',
+          'Nome do Tutor',
+          'Motivo Cancelamento'
+        ];
+      case 'Agendamentos Realizados':
+        return ['Data Agendamento', 'Nome Pet', 'Tutor', 'Horário', 'Serviço'];
+      default:
+        return [];
+    }
+  }
+
+  List<String> _getReportData(Map<String, dynamic> row) {
+    switch (selectedReport) {
+      case 'Aniversários Clientes':
+        return [
+          row['nome'] ?? 'N/A',
+          row['nascimento'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['nascimento'] as Timestamp).toDate())
+              : 'N/A',
+          row['telefone'] ?? 'N/A',
+        ];
+      case 'Aniversários Pets':
+        return [
+          row['nome'] ?? 'N/A',
+          row['nascimento'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['nascimento'] as Timestamp).toDate())
+              : 'N/A',
+          row['idade']?.toString() ?? 'N/A',
+          row['tutor'] ?? 'N/A',
+        ];
+      case 'Novos Clientes':
+        return [
+          row['nome'] ?? 'N/A',
+          row['dtCadastro'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['dtCadastro'] as Timestamp).toDate())
+              : 'N/A',
+        ];
+        // Novos Pets
+        case 'Novos Pets':
+        return [
+          row['nome'] ?? 'N/A',
+          row['dtCadastro'] != null
+            ? DateFormat('dd/MM/yyyy')
+               .format((row['dtCadastro'] as Timestamp).toDate())
+            : 'N/A',
+        ];
+
+      case 'Serviços Cadastrados':
+        return [
+          row['nome'] ?? 'N/A',
+          row['tipo'] ?? 'N/A',
+          row['porte'] ?? 'N/A',
+          (row['duracao']?.toString() ?? 'N/A'),
+        ];
+      case 'Serviços Realizados':
+        return [
+          row['servico'] ?? 'N/A',
+          (row['quantidade']?.toString() ?? 'N/A'),
+        ];
+      case 'Agendamentos Cancelados':
+        return [
+          row['data'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['data'] as Timestamp).toDate())
+              : 'N/A',
+          row['cancelledAt'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['cancelledAt'] as Timestamp).toDate())
+              : 'N/A',
+          row['petNome'] ?? 'N/A',
+          row['tutor'] ?? 'N/A',
+          row['motivoCancel'] ?? 'N/A',
+        ];
+      case 'Agendamentos Realizados':
+        return [
+          row['data'] != null
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['data'] as Timestamp).toDate())
+              : 'N/A',
+          row['petNome'] ?? 'N/A',
+          row['hora'] ?? 'N/A',
+          row['servico']?['nome'] ?? 'Não informado',
+        ];
+      default:
+        return [];
+    }
+  }
+
+ void _exportToPdf() async {
+  try {
+    final pdf = pw.Document();
+
+    // Adiciona o conteúdo do PDF
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,  // Define o formato A4 em paisagem
+        build: (pw.Context context) {
+          return pw.Column(
+            children: [
+              pw.Text(
+                'Relatório: $selectedReport',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.TableHelper.fromTextArray(
+                headers: _getReportHeaders(),
+                data: reportData.map((row) {
+                  return _getReportData(row);
+                }).toList(),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Salvar ou baixar o PDF
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+
+    // Exibir mensagem de sucesso para o usuário
+    // Você pode substituir isso por um diálogo, notificação ou outra forma de feedback
+    print("O PDF foi exportado com sucesso.");
+  } catch (e) {
+    // Tratamento de erro
+    // Aqui você pode exibir uma mensagem de erro ao usuário, logar o erro, etc.
+    print("Ocorreu um erro ao exportar o PDF: $e");
+  }
 }
+    }
