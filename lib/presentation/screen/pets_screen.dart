@@ -74,26 +74,28 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
           "Cadastro do Pet",
           style: boldFont(Colors.black, 20.0),
         ),
-        content: SizedBox(
-          width: size.width * 0.7,
-          height: size.height * 0.7,
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildTutorAndPetNameFields(),
-                  const SizedBox(height: 16),
-                  _buildPetTypeAndSizeFields(),
-                  const SizedBox(height: 16),
-                  _buildBirthDateAndAgeFields(),
-                  const SizedBox(height: 16),
-                  _buildWeightField(),
-                  const SizedBox(height: 32),
-                  _buildConfirmationButton(context),
-                ],
+        content: Observer(
+          builder: (_) => SizedBox(
+            width: size.width * 0.7,
+            height: size.height * 0.7,
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildTutorAndPetNameFields(),
+                    const SizedBox(height: 16),
+                    _buildPetTypeAndSizeFields(),
+                    const SizedBox(height: 16),
+                    _buildBirthDateAndAgeFields(),
+                    const SizedBox(height: 16),
+                    _buildWeightField(),
+                    const SizedBox(height: 32),
+                    _buildConfirmationButton(context),
+                  ],
+                ),
               ),
             ),
           ),

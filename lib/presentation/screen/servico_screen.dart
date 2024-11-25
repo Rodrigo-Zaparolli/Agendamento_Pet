@@ -32,123 +32,6 @@ class _ServicosScreenState
     super.initState();
   }
 
-  List<String> racasSelecionadas = [];
-  String tipoPetSelecionado = 'Escolha';
-  String tipoPorteSelecionado = 'Escolha';
-  String racaSelecionada = 'Escolha';
-  String porteSelecionado = 'Escolha';
-
-  final Map<String, List<String>> porte = {
-    'Cão': [
-      'Pequeno',
-      'Médio',
-      'Grande',
-    ],
-    'Gato': [
-      'Pequeno, de 2 a 4 kg',
-      'Médio, de 4 a 6 kg',
-      'Grande, acima de 6 kg',
-    ],
-  };
-
-  final Map<String, List<String>> portePequeno = {
-    'Cão': [
-      'Affenpinscher',
-      'Bichon Frisé',
-      'Boston Terrier',
-      'Cavalier King Charles Spaniel',
-      'Chihuahua',
-      'Cocker Spaniel Americano',
-      'Dachshund (Teckel)',
-      'Jack Russell Terrier',
-      'Lhasa Apso',
-      'Maltês',
-      'Papillon',
-      'Pekingese',
-      'Pomeranian (Spitz Alemão Anão)',
-      'Poodle Toy',
-      'Pug',
-      'Shih Tzu',
-      'Silky Terrier',
-      'Welsh Corgi Pembroke',
-      'West Highland White Terrier',
-      'Yorkshire Terrier',
-    ],
-    'Gato': [
-      'Singapura',
-      'Cornish Rex',
-      'Munchkin',
-      'Devon Rex',
-      'Sphynx',
-    ],
-  };
-
-  final Map<String, List<String>> porteMedio = {
-    'Cão': [
-      'American Staffordshire Terrier',
-      'Australian Shepherd',
-      'Basenji',
-      'Beagle',
-      'Border Collie',
-      'Bull Terrier',
-      'Bulldog Francês',
-      'Bulldog Inglês',
-      'Cocker Spaniel Inglês',
-      'Dálmata',
-      'Poodle Médio',
-      'Schnauzer Miniatura',
-      'Staffordshire Bull Terrier',
-      'Shiba Inu',
-      'Shetland Sheepdog',
-      'Shar-Pei',
-      'Whippet',
-      'Wheaten Terrier',
-    ],
-    'Gato': [
-      'Siamês',
-      'Abyssinian',
-      'Birmanês',
-      'American Shorthair',
-      'British Shorthair',
-      'Persa',
-      'Scottish Fold',
-    ],
-  };
-
-  final Map<String, List<String>> porteGrande = {
-    'Cão': [
-      'Akita Inu',
-      'Bernese Mountain Dog',
-      'Boxer',
-      'Bullmastiff',
-      'Cane Corso',
-      'Collie',
-      'Dogue Alemão',
-      'Fila Brasileiro',
-      'Golden Retriever',
-      'Dálmata',
-      'Golden Retriever',
-      'Labrador Retriever',
-      'Mastiff',
-      'Pastor Alemão',
-      'Pastor Belga',
-      'Rottweiler',
-      'Samoyed',
-      'São Bernardo',
-      'Siberian Husky',
-      'Terra Nova (Newfoundland)',
-      'Weimaraner',
-      'Wolfhound Irlandês',
-    ],
-    'Gato': [
-      'Maine Coon',
-      'Ragdoll',
-      'BirmNorueguês da Florestaanês',
-      'Savannah',
-      'Siberiano',
-    ],
-  };
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,10 +40,117 @@ class _ServicosScreenState
         child: Row(
           children: [
             _buildServicoListSection(),
-            _buildServicoFormSection(context),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: MColors.blue,
+        onPressed: () => _showCadastroDialog(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  _showCadastroDialog() {
+    final size = MediaQuery.of(context).size;
+    return showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+            "Cadastro de Servico",
+            style: boldFont(Colors.black, 20.0),
+          ),
+          content: Observer(
+            builder: (_) => SizedBox(
+              width: size.width * 0.7,
+              height: size.height * 0.7,
+              child: SingleChildScrollView(
+                child: Form(
+                    child: Column(
+                  children: [
+                    _buildPetTypeAndSizeFields(),
+                    const SizedBox(height: 20),
+                    buildTextField('Nome do Serviço:', 'Nome',
+                        controller.nomeServicoController),
+                    const SizedBox(height: 10),
+                    buildMaskedTextField('Preço:', 'Preço', precoController),
+                    const SizedBox(height: 10),
+                    buildTextField('Duração do Serviço:', 'Duração',
+                        controller.duracaoServicoController,
+                        isNumber: true),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButtomWidget(
+                        buttonChild: Text(
+                          'Confirmar',
+                          style: boldFont(MColors.primaryWhite, 16.0),
+                        ),
+                        onPressed: () async {
+                          await _confirmarCadastro(context);
+                          Navigator.of(context).pop();
+                        },
+                        color: MColors.blue,
+                      ),
+                    ),
+                  ],
+                )),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPetTypeAndSizeFields() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: buildDropdownField(
+            'Tipo de Pet:',
+            ['Escolha', 'Cão', 'Gato'],
+            value: controller.tipoPetSelecionado,
+            onChanged: (value) {
+              controller.tipoPetSelecionado = value ?? 'Escolha';
+              controller.porteSelecionado = 'Escolha';
+              controller.racasSelecionadas = [];
+              controller.racaSelecionada = 'Escolha';
+            },
+            validator: (value) {
+              if (value == null || value == 'Escolha') {
+                return 'Por favor, selecione o tipo de pet';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: buildDropdownField(
+            'Porte:',
+            controller.tipoPetSelecionado == 'Escolha'
+                ? ['Escolha']
+                : controller.porte[controller.tipoPetSelecionado] ??
+                    ['Escolha'],
+            value: controller.porteSelecionado,
+            onChanged: (value) {
+              controller.porteSelecionado = value ?? 'Escolha';
+              controller.racaSelecionada = 'Escolha';
+
+              controller.atualizarRacas();
+            },
+            validator: (value) {
+              if (value == null || value == 'Escolha') {
+                return 'Por favor, selecione o porte';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -230,9 +220,8 @@ class _ServicosScreenState
                             title: Text(servico.nome),
                             subtitle: Text('Preço: R\$ ${servico.preco} / '
                                 'Duração: ${servico.duracao} minutos'
-                                'Tipo: ${servico.tipo} / ' // Exibe o tipo do serviço
-                                'Porte: ${servico.porte} ' // Exibe o porte do serviço
-                                ),
+                                'Tipo: ${servico.tipo} / '
+                                'Porte: ${servico.porte} '),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -266,146 +255,24 @@ class _ServicosScreenState
     );
   }
 
-  Widget _buildServicoFormSection(BuildContext context) {
-    return Expanded(
-      flex: 2,
-      child: SingleChildScrollView(
-        child: Card(
-          elevation: 2,
-          margin: const EdgeInsets.all(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.add_box, color: MColors.blue),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Cadastrar Serviço',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: MColors.blue,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildServiceFormFields(),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomButtomWidget(
-                    buttonChild: Text(
-                      'Confirmar',
-                      style: boldFont(MColors.primaryWhite, 16.0),
-                    ),
-                    onPressed: () => _confirmarCadastro(context),
-                    color: MColors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildServiceFormFields() {
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: buildDropdownField(
-                'Tipo de Pet:',
-                ['Escolha', 'Cão', 'Gato'],
-                onChanged: (value) {
-                  setState(() {
-                    tipoPetSelecionado = value ?? 'Escolha';
-                    porteSelecionado = 'Escolha';
-                    racasSelecionadas = [];
-                    racaSelecionada = 'Escolha';
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value == 'Escolha') {
-                    return 'Por favor, selecione o tipo de pet';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: buildDropdownField(
-                'Porte:',
-                tipoPetSelecionado == 'Escolha'
-                    ? ['Escolha']
-                    : porte[tipoPetSelecionado] ?? ['Escolha'],
-                onChanged: (value) {
-                  setState(() {
-                    porteSelecionado = value ?? 'Escolha';
-                    racasSelecionadas = [];
-                    racaSelecionada = 'Escolha';
-
-                    if (tipoPetSelecionado == 'Cão') {
-                      if (porteSelecionado == 'Pequeno') {
-                        racasSelecionadas = portePequeno['Cão'] ?? [];
-                      } else if (porteSelecionado == 'Médio') {
-                        racasSelecionadas = porteMedio['Cão'] ?? [];
-                      } else if (porteSelecionado == 'Grande') {
-                        racasSelecionadas = porteGrande['Cão'] ?? [];
-                      }
-                    } else if (tipoPetSelecionado == 'Gato') {
-                      if (porteSelecionado == 'Pequeno, de 2 a 4 kg') {
-                        racasSelecionadas = portePequeno['Gato'] ?? [];
-                      } else if (porteSelecionado == 'Médio, de 4 a 6 kg') {
-                        racasSelecionadas = porteMedio['Gato'] ?? [];
-                      } else if (porteSelecionado == 'Grande, acima de 6 kg') {
-                        racasSelecionadas = porteGrande['Gato'] ?? [];
-                      }
-                    }
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value == 'Escolha') {
-                    return 'Por favor, selecione o porte';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        buildTextField(
-            'Nome do Serviço:', 'Nome', controller.nomeServicoController),
-        const SizedBox(height: 10),
-        buildMaskedTextField('Preço:', 'Preço', precoController),
-        const SizedBox(height: 10),
-        buildTextField('Duração do Serviço:', 'Duração',
-            controller.duracaoServicoController,
-            isNumber: true),
-      ],
-    );
-  }
-
   Widget buildDropdownField(
     String label,
     List<String> options, {
+    String? value,
     String? Function(String?)? validator,
     void Function(String?)? onChanged,
   }) {
+    // Verifica se o valor inicial existe na lista de opções.
+    final initialValue = options.contains(value)
+        ? value
+        : (options.isNotEmpty ? options.first : null);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
@@ -413,11 +280,16 @@ class _ServicosScreenState
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
-          value: options.contains('Escolha') ? 'Escolha' : null,
+          value: initialValue,
           items: options
+              .toSet() // Remove valores duplicados
               .map((option) => DropdownMenuItem<String>(
                     value: option,
-                    child: Text(option),
+                    child: Text(
+                      option,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ))
               .toList(),
           onChanged: onChanged,
@@ -472,8 +344,8 @@ class _ServicosScreenState
   }
 
   Future<void> _confirmarCadastro(BuildContext context) async {
-    if (tipoPetSelecionado.isEmpty ||
-        porteSelecionado.isEmpty ||
+    if (controller.tipoPetSelecionado.isEmpty ||
+        controller.porteSelecionado.isEmpty ||
         controller.nomeServicoController.text.isEmpty ||
         precoController.numberValue <= 0 ||
         controller.duracaoServicoController.text.isEmpty) {
@@ -485,8 +357,8 @@ class _ServicosScreenState
 
     final servico = Servico(
       id: "",
-      tipo: tipoPetSelecionado,
-      porte: porteSelecionado,
+      tipo: controller.tipoPetSelecionado,
+      porte: controller.porteSelecionado,
       nome: controller.nomeServicoController.text,
       preco: precoController.numberValue,
       duracao: int.parse(controller.duracaoServicoController.text),

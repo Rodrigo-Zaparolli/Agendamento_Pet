@@ -80,9 +80,19 @@ class _AgendamentosScreenState
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
+                                child: buildTextField('Tutor', 'Tutor',
+                                    controller.tutorPetController),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
                                 child: buildTextField('Raça:', 'Raça',
                                     controller.racaPetController),
                               ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               const SizedBox(width: 10),
                               Expanded(
                                 child: buildTextField('Idade:', 'Idade do pet',
@@ -224,9 +234,10 @@ class _AgendamentosScreenState
                                     child: ListTile(
                                       title: Text(agendamento.petNome),
                                       subtitle: Text(
-                                        'Raça: ${agendamento.raca}, / '
-                                        'Idade: ${agendamento.idade} anos, / '
-                                        'Peso: ${agendamento.peso} kg, / '
+                                        'Tutor: ${agendamento.tutor} / '
+                                        'Raça: ${agendamento.raca} / '
+                                        'Idade: ${agendamento.idade} anos / '
+                                        'Peso: ${agendamento.peso} kg / '
                                         'Serviço: ${agendamento.servico.nome} / '
                                         'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.data)} / '
                                         'Hora: ${agendamento.hora}',
@@ -284,64 +295,85 @@ class _AgendamentosScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Data:', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller.dataController,
-          readOnly: true,
-          decoration: const InputDecoration(
-            hintText: 'dd/MM/yyyy',
-            suffixIcon: Icon(Icons.calendar_today),
-            border: OutlineInputBorder(),
-          ),
-          onTap: () async {
-            FocusScope.of(context).requestFocus(FocusNode());
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Data:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: controller.dataController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      hintText: 'dd/MM/yyyy',
+                      suffixIcon: Icon(Icons.calendar_today),
+                      border: OutlineInputBorder(),
+                    ),
+                    onTap: () async {
+                      FocusScope.of(context).requestFocus(FocusNode());
 
-            DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2101),
-            );
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2101),
+                      );
 
-            if (pickedDate != null) {
-              setState(() {
-                controller.selectedDate = pickedDate;
-                controller.dataController.text =
-                    DateFormat('dd/MM/yyyy').format(pickedDate);
+                      if (pickedDate != null) {
+                        setState(() {
+                          controller.selectedDate = pickedDate;
+                          controller.dataController.text =
+                              DateFormat('dd/MM/yyyy').format(pickedDate);
 
-                // Limpa o slot selecionado
-                controller.selectedTimeSlot = null;
-              });
+                          // Limpa o slot selecionado
+                          controller.selectedTimeSlot = null;
+                        });
 
-              List<String> availableSlots =
-                  await controller.getAvailableTimeSlots(pickedDate);
-              setState(() {
-                controller.availableTimeSlots = availableSlots;
-              });
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-        const Text('Horário:', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: controller.selectedTimeSlot,
-          items: controller.availableTimeSlots.map((time) {
-            return DropdownMenuItem(
-              value: time,
-              child: Text(time),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              controller.selectedTimeSlot = value;
-            });
-          },
-          decoration: const InputDecoration(
-            hintText: 'Selecione um horário',
-            border: OutlineInputBorder(),
-          ),
+                        List<String> availableSlots =
+                            await controller.getAvailableTimeSlots(pickedDate);
+                        setState(() {
+                          controller.availableTimeSlots = availableSlots;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10), // Espaço entre os campos
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Horário:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: controller.selectedTimeSlot,
+                    items: controller.availableTimeSlots.map((time) {
+                      return DropdownMenuItem(
+                        value: time,
+                        child: Text(time),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        controller.selectedTimeSlot = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Selecione um horário',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -571,6 +603,7 @@ class _AgendamentosScreenState
       final agendamento = Agendamento(
         petNome: controller.selectedPet!.nome,
         raca: controller.racaPetController.text,
+        tutor: controller.tutorPetController.text,
         idade: controller.idadePetController.text,
         peso: controller.pesoPetController.text,
         sexo: controller.selectedSexo!,

@@ -7,6 +7,7 @@ class Agendamento {
   String userId;
   String petNome;
   String raca;
+  String tutor;
   String idade;
   String peso;
   String sexo;
@@ -24,6 +25,7 @@ class Agendamento {
     required this.userId,
     required this.petNome,
     required this.raca,
+    required this.tutor,
     required this.idade,
     required this.peso,
     required this.sexo,
@@ -43,6 +45,7 @@ class Agendamento {
       'userId': userId,
       'petNome': petNome,
       'raca': raca,
+      'tutor': tutor,
       'idade': idade,
       'peso': peso,
       'sexo': sexo,
@@ -64,6 +67,7 @@ class Agendamento {
       userId: data['userId'] ?? '',
       petNome: data['petNome'] ?? '',
       raca: data['raca'] ?? '',
+      tutor: data['tutor'] ?? '',
       idade: data['idade'] ?? '',
       peso: data['peso'] ?? '',
       sexo: data['sexo'] ?? '',
@@ -87,6 +91,7 @@ class Agendamento {
       userId: data['userId'] ?? '',
       petNome: data['petNome'] ?? '',
       raca: data['raca'] ?? '',
+      tutor: data['tutor'] ?? '',
       idade: data['idade'] ?? '',
       peso: data['peso'] ?? '',
       sexo: data['sexo'] ?? '',

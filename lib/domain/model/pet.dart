@@ -11,6 +11,7 @@ class Pet {
   String raca;
   String porte;
   DateTime nascimento;
+  DateTime dtCadastro;
   String idade;
   String peso;
   String sexo;
@@ -24,6 +25,7 @@ class Pet {
     required this.raca,
     required this.porte,
     required this.nascimento,
+    required this.dtCadastro,
     required this.idade,
     required this.peso,
     required this.sexo,
@@ -35,8 +37,9 @@ class Pet {
 
   Map<String, dynamic> toJson() {
     final json = _$PetToJson(this);
-    // Converter 'nascimento' para Timestamp antes de retornar
+
     json['nascimento'] = Timestamp.fromDate(nascimento);
+    json['dtCadastro'] = Timestamp.fromDate(dtCadastro);
     return json;
   }
 
@@ -49,6 +52,9 @@ class Pet {
       nascimento: data['nascimento'] is String
           ? DateTime.parse(data['nascimento'])
           : (data['nascimento'] as Timestamp).toDate(),
+      dtCadastro: data['dtCadastro'] is String
+          ? DateTime.parse(data['dtCadastro'])
+          : (data['dtCadastro'] as Timestamp).toDate(),
       raca: data['raca'] ?? '',
       porte: data['porte'] ?? '',
       idade: data['idade'] ?? '',

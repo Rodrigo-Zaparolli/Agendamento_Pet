@@ -224,6 +224,7 @@ class _RelatoriosScreenState
       ['nome', 'dtCadastro'],
     );
   }
+
   //Pets Novos
   Widget _buildCadastroPetReport() {
     return _buildReport(
@@ -252,7 +253,13 @@ class _RelatoriosScreenState
   Widget _buildAgendamentosCanceladosReport() {
     return _buildReport(
       reportData,
-      ['Data Agendamento', 'Data Cancelamento', 'Nome Pet', 'Tutor', 'Motivo Cancel.'],
+      [
+        'Data Agendamento',
+        'Data Cancelamento',
+        'Nome Pet',
+        'Tutor',
+        'Motivo Cancel.'
+      ],
       ['data', 'cancelledAt', 'petNome', 'tutor', 'motivoCancel'],
     );
   }
@@ -334,7 +341,7 @@ class _RelatoriosScreenState
       case 'Novos Clientes':
         return ['Nome do Cliente', 'Data do Cadastro'];
       case 'Novos Pets':
-        return ['Nome do Pet', 'Data do Cadastro'];
+        return ['Nome do Pet', 'Data do Cadastro', 'Tutor'];
       case 'Serviços Cadastrados':
         return ['Nome do Serviço', 'Pet', 'Porte', 'Duração'];
       case 'Serviços Realizados':
@@ -383,14 +390,15 @@ class _RelatoriosScreenState
                   .format((row['dtCadastro'] as Timestamp).toDate())
               : 'N/A',
         ];
-        // Novos Pets
-        case 'Novos Pets':
+      // Novos Pets
+      case 'Novos Pets':
         return [
           row['nome'] ?? 'N/A',
           row['dtCadastro'] != null
-            ? DateFormat('dd/MM/yyyy')
-               .format((row['dtCadastro'] as Timestamp).toDate())
-            : 'N/A',
+              ? DateFormat('dd/MM/yyyy')
+                  .format((row['dtCadastro'] as Timestamp).toDate())
+              : 'N/A',
+          row['tutor'] ?? 'N/A',
         ];
 
       case 'Serviços Cadastrados':
@@ -434,49 +442,50 @@ class _RelatoriosScreenState
     }
   }
 
- void _exportToPdf() async {
-  try {
-    final pdf = pw.Document();
+  void _exportToPdf() async {
+    try {
+      final pdf = pw.Document();
 
-    // Adiciona o conteúdo do PDF
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4.landscape,  // Define o formato A4 em paisagem
-        build: (pw.Context context) {
-          return pw.Column(
-            children: [
-              pw.Text(
-                'Relatório: $selectedReport',
-                style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
+      // Adiciona o conteúdo do PDF
+      pdf.addPage(
+        pw.Page(
+          pageFormat:
+              PdfPageFormat.a4.landscape, // Define o formato A4 em paisagem
+          build: (pw.Context context) {
+            return pw.Column(
+              children: [
+                pw.Text(
+                  'Relatório: $selectedReport',
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.TableHelper.fromTextArray(
-                headers: _getReportHeaders(),
-                data: reportData.map((row) {
-                  return _getReportData(row);
-                }).toList(),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                pw.SizedBox(height: 20),
+                pw.TableHelper.fromTextArray(
+                  headers: _getReportHeaders(),
+                  data: reportData.map((row) {
+                    return _getReportData(row);
+                  }).toList(),
+                ),
+              ],
+            );
+          },
+        ),
+      );
 
-    // Salvar ou baixar o PDF
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-    );
+      // Salvar ou baixar o PDF
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
 
-    // Exibir mensagem de sucesso para o usuário
-    // Você pode substituir isso por um diálogo, notificação ou outra forma de feedback
-    print("O PDF foi exportado com sucesso.");
-  } catch (e) {
-    // Tratamento de erro
-    // Aqui você pode exibir uma mensagem de erro ao usuário, logar o erro, etc.
-    print("Ocorreu um erro ao exportar o PDF: $e");
+      // Exibir mensagem de sucesso para o usuário
+      // Você pode substituir isso por um diálogo, notificação ou outra forma de feedback
+      print("O PDF foi exportado com sucesso.");
+    } catch (e) {
+      // Tratamento de erro
+      // Aqui você pode exibir uma mensagem de erro ao usuário, logar o erro, etc.
+      print("Ocorreu um erro ao exportar o PDF: $e");
+    }
   }
 }
-    }

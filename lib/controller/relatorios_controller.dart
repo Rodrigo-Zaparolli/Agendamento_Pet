@@ -51,8 +51,7 @@ abstract class _RelatoriosControllerBase with Store {
       ObservableList.of([]);
 
   @observable
-  ObservableList<Map<String, dynamic>> petsCadastrados =
-      ObservableList.of([]);
+  ObservableList<Map<String, dynamic>> petsCadastrados = ObservableList.of([]);
 
   @observable
   ObservableList<Map<String, dynamic>> servicosCadastrados =
@@ -116,16 +115,13 @@ abstract class _RelatoriosControllerBase with Store {
         reportData = await fetchNovosClientes(startDate, endDate);
         break;
       case 'Novos Pets':
-      reportData = await fetchNovosPets(startDate, endDate);
-      break;
+        reportData = await fetchPetsCadastrados(startDate, endDate);
+        break;
       case 'Aniversários Clientes':
         reportData = await fetchAniversariosClientes(startDate, endDate);
         break;
       case 'Aniversários Pets':
         reportData = await fetchAniversariosPets(startDate, endDate);
-        break;
-      case 'Clientes Cadastrados':
-        reportData = await fetchClientesCadastrados(startDate, endDate);
         break;
       case 'Serviços Cadastrados':
         reportData = await fetchServicosCadastrados();
@@ -173,16 +169,17 @@ abstract class _RelatoriosControllerBase with Store {
       return [];
     }
   }
+
   @action
   Future<List<Map<String, dynamic>>> fetchNovosPets(
-    DateTime inicio, DateTime fim) async {
-      try {
-        return await firebaseUsecase.listarNovosPets(inicio, fim);
-        } catch (e) {
-          print("Erro ao buscar novos pets: $e");
-          return [];
-          }
-          }
+      DateTime inicio, DateTime fim) async {
+    try {
+      return await firebaseUsecase.listarNovosPets(inicio, fim);
+    } catch (e) {
+      print("Erro ao buscar novos pets: $e");
+      return [];
+    }
+  }
 
   @action
   Future<List<Map<String, dynamic>>> fetchServicosRealizados(
@@ -246,15 +243,15 @@ abstract class _RelatoriosControllerBase with Store {
 
   @action
   Future<List<Map<String, dynamic>>> fetchPetsCadastrados(
-    DateTime inicio, DateTime fim) async {
-      try {
-        return await firebaseUsecase.fetchPetsCadastrados(inicio, fim);
-        } catch (e) {
-          print("Erro ao buscar pets cadastrados: $e");
-          return [];
-      }
+      DateTime inicio, DateTime fim) async {
+    try {
+      return await firebaseUsecase.listarNovosPets(inicio, fim);
+    } catch (e) {
+      print("Erro ao buscar pets cadastrados: $e");
+      return [];
     }
-        
+  }
+
   Future<List<Map<String, dynamic>>> fetchAgendamentosCancelados(
       DateTime startDate, DateTime endDate) async {
     List<Agendamento> agendamentos =

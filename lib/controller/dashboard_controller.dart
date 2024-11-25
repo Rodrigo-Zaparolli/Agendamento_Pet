@@ -796,6 +796,7 @@ abstract class _DashboardControllerBase with Store {
         raca: raca,
         porte: porte,
         nascimento: dataNascimentoPet,
+        dtCadastro: DateTime.now(),
         idade: idadePetController.text,
         peso: pesoPetController.text,
         sexo: sexo,

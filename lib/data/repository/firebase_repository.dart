@@ -475,6 +475,20 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  @override
+  Future<List<Map<String, dynamic>>> listarNovosPets(
+      DateTime inicio, DateTime fim) async {
+    final startTimestamp = Timestamp.fromDate(inicio);
+    final endTimestamp = Timestamp.fromDate(fim);
+    final querySnapshot = await firestore
+        .collection('pets')
+        .where('dtCadastro', isGreaterThanOrEqualTo: startTimestamp)
+        .where('dtCadastro', isLessThanOrEqualTo: endTimestamp)
+        .get();
+
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
+  }
+
   // Função para contar serviços realizados em um intervalo de tempo
   @override
   Future<List<Map<String, dynamic>>> contarServicosRealizados(
@@ -630,6 +644,29 @@ class FirestoreRepositoryImpl implements FirestoreRepository {
           .map((doc) => {
                 'nome': doc['nome'],
                 'dataCadastro': doc['dataCadastro'],
+              })
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchPetsCadastrados(
+      DateTime dtInicial, DateTime dtFinal) async {
+    try {
+      final snapshot = await firestore
+          .collection('pets')
+          .where('dtCadastro', isGreaterThanOrEqualTo: dtInicial)
+          .where('dtCadastro', isLessThanOrEqualTo: dtFinal)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => {
+                'nome': doc['nome'],
+                'tipo': doc['tipo'],
+                'tutor': doc['tutor'],
+                'dtCadastro': doc['dtCadastro']
               })
           .toList();
     } catch (e) {
