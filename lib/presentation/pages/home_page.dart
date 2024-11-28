@@ -106,10 +106,14 @@ class _HomePageState extends WidgetStateful<HomePage, HomeController> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GestureDetector(
-                      onTap: () => Navigator.of(context).pushNamed("/user"),
+                      onTap: () =>
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                        "/index",
+                        (route) => true,
+                      ),
                       child: CircleAvatar(
                         backgroundColor: Colors.white,
-                        child: Icon(Icons.person, color: MColors.blue),
+                        child: Icon(Icons.exit_to_app, color: MColors.blue),
                       ),
                     ),
                   ),

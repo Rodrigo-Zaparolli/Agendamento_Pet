@@ -11,11 +11,13 @@ import 'package:agendamento_pet/domain/model/servico.dart';
 import 'package:agendamento_pet/domain/usecase/busca_cep_usecase.dart';
 import 'package:agendamento_pet/domain/usecase/firebase_usecase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:mobx/mobx.dart';
 import 'package:flutter/material.dart';
+import 'package:emailjs/emailjs.dart' as emailjs;
 
 part 'dashboard_controller.g.dart';
 
@@ -143,6 +145,8 @@ abstract class _DashboardControllerBase with Store {
   @observable
   List<String> racasSelecionadas = [];
 
+  List<Pet> filteredPets = [];
+
   @observable
   String errorMessage = '';
   String errorMessagePet = '';
@@ -168,7 +172,7 @@ abstract class _DashboardControllerBase with Store {
   @observable
   int agendamentosCanceladosMes = 0;
 
-  String? selectedSexo;
+  String? selectedSexo = 'Escolha';
 
   DateTime? selectedDate;
 
@@ -325,6 +329,11 @@ abstract class _DashboardControllerBase with Store {
   String get currentUserId {
     final User? user = _firebaseAuth.currentUser;
     return user?.uid ?? '';
+  }
+
+  String get currentUserEmail {
+    final User? user = _firebaseAuth.currentUser;
+    return user?.email ?? '';
   }
 
   getUserDetails() async {
@@ -534,9 +543,19 @@ abstract class _DashboardControllerBase with Store {
     }
   }
 
+  void initFilteredPets() {
+    filteredPets = pets;
+  }
+
+  @action
+  void setSelectedSexo(String sexo) {
+    selectedSexo = sexo;
+  }
+
   @action
   void setSelectedPet(Pet pet) {
     selectedPet = pet;
+    selectedSexo = pet.sexo;
   }
 
   @action
@@ -1016,6 +1035,13 @@ abstract class _DashboardControllerBase with Store {
       agendamentos.add(agendamento);
       clearPetFields();
 
+      print(currentUserEmail);
+      // Enviar confirmação de agendamento por e-mail
+      await sendEmail(
+        currentUserEmail,
+        agendamento,
+      );
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -1047,6 +1073,52 @@ abstract class _DashboardControllerBase with Store {
       );
       isLoading = false;
       rethrow;
+    }
+  }
+
+  sendEmail(String recipient, Agendamento agendamento) async {
+    isLoading = true;
+    final String serviceId = dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
+    final String templateId = dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
+    final String publicKey = dotenv.env['EMAILJS_PUBLIC_KEY'] ?? '';
+    final String privateKey = dotenv.env['EMAILJS_PRIVATE_KEY'] ?? '';
+
+    if (serviceId.isEmpty ||
+        templateId.isEmpty ||
+        publicKey.isEmpty ||
+        privateKey.isEmpty) {
+      print('Erro: Variáveis de ambiente não configuradas corretamente.');
+      return;
+    }
+
+    String formattedDate = DateFormat('dd/MM/yyyy').format(agendamento.data);
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          'to_email': recipient,
+          'user_name': agendamento.tutor,
+          'agendamento_data': formattedDate,
+          'agendamento_hora': agendamento.hora,
+          'servico': servico[0].nome,
+          'agendamento_petNome': agendamento.petNome,
+          // 'message': message,
+        },
+        emailjs.Options(
+          publicKey: publicKey,
+          privateKey: privateKey,
+          limitRate: const emailjs.LimitRate(
+            id: 'app',
+            throttle: 10000,
+          ),
+        ),
+      );
+      print('E-mail enviado com sucesso para $recipient.');
+      isLoading = false;
+    } catch (error) {
+      print('Erro no envio do e-mail: ${error.toString()}');
+      isLoading = false;
     }
   }
 

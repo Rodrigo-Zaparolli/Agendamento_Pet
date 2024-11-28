@@ -29,6 +29,8 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
 
     controller.fetchClients();
     controller.fetchPets();
+
+    controller.tutorSelecionado = controller.tutorPetController.text;
   }
 
   List<String> tutores = [];

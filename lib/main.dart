@@ -5,6 +5,7 @@ import 'package:agendamento_pet/di/di.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 String tela = "";
 
@@ -18,8 +19,9 @@ void main() async {
     projectId: "agendamento-b8f6e",
   ));
   configureInjection();
-  tela = await AppFuncoes().isConfigured() ? "/home" : "/index";
 
+  tela = await AppFuncoes().isConfigured() ? "/home" : "/index";
+  await dotenv.load(fileName: "assets/files/.env.prod");
   runApp(const MyApp());
 }
 

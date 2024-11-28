@@ -727,6 +727,17 @@ mixin _$DashboardController on _DashboardControllerBase, Store {
       ActionController(name: '_DashboardControllerBase', context: context);
 
   @override
+  void setSelectedSexo(String sexo) {
+    final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
+        name: '_DashboardControllerBase.setSelectedSexo');
+    try {
+      return super.setSelectedSexo(sexo);
+    } finally {
+      _$_DashboardControllerBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void setSelectedPet(Pet pet) {
     final _$actionInfo = _$_DashboardControllerBaseActionController.startAction(
         name: '_DashboardControllerBase.setSelectedPet');

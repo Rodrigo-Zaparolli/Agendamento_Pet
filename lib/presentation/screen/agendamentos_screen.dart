@@ -27,10 +27,13 @@ class _AgendamentosScreenState
   void initState() {
     controller.getUserDetails();
     controller.fetchPets();
+    controller.fetchClients();
     controller.carregarAgendamentos();
     controller.fecthServico();
     super.initState();
   }
+
+  List<String> tutores = [];
 
   @override
   Widget build(BuildContext context) {
@@ -76,14 +79,9 @@ class _AgendamentosScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildPetDropdown(),
+                          const SizedBox(height: 10),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: buildTextField('Tutor', 'Tutor',
-                                    controller.tutorPetController),
-                              ),
-                              const SizedBox(width: 10),
                               Expanded(
                                 child: buildTextField('Raça:', 'Raça',
                                     controller.racaPetController),
@@ -91,9 +89,7 @@ class _AgendamentosScreenState
                             ],
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const SizedBox(width: 10),
                               Expanded(
                                 child: buildTextField('Idade:', 'Idade do pet',
                                     controller.idadePetController),
@@ -108,6 +104,7 @@ class _AgendamentosScreenState
                           const SizedBox(height: 10),
                           const Text('Sexo:',
                               style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: controller.selectedSexo,
                             items: ['Escolha', 'Macho', 'Fêmea']
@@ -117,9 +114,9 @@ class _AgendamentosScreenState
                                     ))
                                 .toList(),
                             onChanged: (value) {
-                              setState(() {
-                                controller.selectedSexo = value;
-                              });
+                              if (value != null) {
+                                controller.setSelectedSexo(value);
+                              }
                             },
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
@@ -344,7 +341,7 @@ class _AgendamentosScreenState
                 ],
               ),
             ),
-            const SizedBox(width: 10), // Espaço entre os campos
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,50 +379,122 @@ class _AgendamentosScreenState
   Widget _buildPetDropdown() {
     return Observer(
       builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Pet:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  )),
-              SizedBox(
-                width: double.infinity,
-                child: DropdownButtonFormField<Pet>(
-                  value: controller.selectedPet,
-                  items: controller.pets.map((pet) {
-                    return DropdownMenuItem(
-                      value: pet,
-                      child: Text(pet.nome),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      controller.selectedPet = value;
-                      if (controller.selectedPet != null) {
-                        _fillPetDetails(controller.selectedPet!);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: buildDropdownTutorField(
+                    'Tutor:',
+                    controller.clients.isEmpty
+                        ? ["Escolha"]
+                        : controller.clients
+                            .map((client) => client.nome)
+                            .toList(),
+                    value: controller.tutorSelecionado,
+                    onChanged: (value) {
+                      controller.tutorSelecionado = value ?? 'Escolha';
+
+                      controller.filteredPets = controller.pets
+                          .where((pet) => pet.tutor == value)
+                          .toList();
+                      controller.selectedPet = null;
+                    },
+                    validator: (value) {
+                      if (value == null || value == 'Escolha') {
+                        return 'Por favor, selecione o tutor';
                       }
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    hintText: 'Selecione um pet',
-                    border: OutlineInputBorder(),
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Pet:",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<Pet>(
+                        value: controller.selectedPet,
+                        items: controller.filteredPets.map((pet) {
+                          return DropdownMenuItem(
+                            value: pet,
+                            child: Text(pet.nome),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.setSelectedPet(value);
+                            _fillPetDetails(value);
+                          }
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Selecione um pet',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       },
+    );
+  }
+
+  Widget buildDropdownField(
+    String label,
+    List<String> options, {
+    String? value,
+    String? Function(String?)? validator,
+    void Function(String?)? onChanged,
+  }) {
+    // Verifica se o valor inicial existe na lista de opções.
+    final initialValue = options.contains(value)
+        ? value
+        : (options.isNotEmpty ? options.first : null);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+          value: initialValue,
+          items: options
+              .toSet() // Remove valores duplicados
+              .map((option) => DropdownMenuItem<String>(
+                    value: option,
+                    child: Text(
+                      option,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ))
+              .toList(),
+          onChanged: onChanged,
+          validator: validator,
+        ),
+      ],
     );
   }
 
   Widget _buildServicoDropdown() {
     return Observer(
       builder: (_) {
-        // Filtra os serviços de acordo com o porte do pet selecionado
         final servicosFiltrados =
             controller.getServicosPorPorte(controller.selectedPet);
 
@@ -436,6 +505,7 @@ class _AgendamentosScreenState
             children: [
               const Text('Serviço:',
                   style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
                 child: DropdownButtonFormField<Servico>(
@@ -465,6 +535,50 @@ class _AgendamentosScreenState
     );
   }
 
+  Widget buildDropdownTutorField(
+    String label,
+    List<String> options, {
+    String? value,
+    String? Function(String?)? validator,
+    void Function(String?)? onChanged,
+  }) {
+    // Verifica se o valor inicial existe na lista de opções.
+    final initialValue = options.contains(value)
+        ? value
+        : (options.isNotEmpty ? options.first : null);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+          value: initialValue,
+          items: options
+              .toSet() // Remove valores duplicados
+              .map((option) => DropdownMenuItem<String>(
+                    value: option,
+                    child: Text(
+                      option,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ))
+              .toList(),
+          onChanged: onChanged,
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
   void _fillPetDetails(Pet pet) {
     controller.racaPetController.text = pet.raca;
     controller.idadePetController.text = pet.idade.toString();
@@ -483,6 +597,7 @@ class _AgendamentosScreenState
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               )),
+          const SizedBox(height: 8),
           TextFormField(
             controller: controller,
             decoration: InputDecoration(
@@ -603,7 +718,7 @@ class _AgendamentosScreenState
       final agendamento = Agendamento(
         petNome: controller.selectedPet!.nome,
         raca: controller.racaPetController.text,
-        tutor: controller.tutorPetController.text,
+        tutor: controller.tutorSelecionado,
         idade: controller.idadePetController.text,
         peso: controller.pesoPetController.text,
         sexo: controller.selectedSexo!,
