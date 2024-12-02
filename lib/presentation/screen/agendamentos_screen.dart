@@ -239,35 +239,42 @@ class _AgendamentosScreenState
                                         'Data: ${DateFormat('dd/MM/yyyy').format(agendamento.data)} / '
                                         'Hora: ${agendamento.hora}',
                                       ),
-                                      leading: controller.role == 'manager'
-                                          ? SizedBox(
-                                              width: 50,
-                                              height: 50,
-                                              child: Checkbox(
-                                                focusColor: MColors.teal,
-                                                hoverColor: MColors.teal,
-                                                value: agendamento.isRealizado,
-                                                onChanged: (bool? value) {
-                                                  setState(() {
-                                                    agendamento.isRealizado =
-                                                        value ?? false;
-                                                  });
-                                                  controller
-                                                      .atualizarStatusRealizado(
-                                                          agendamento);
-                                                  controller
-                                                      .carregarAgendamentos();
-                                                },
-                                              ),
-                                            )
-                                          : Container(),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            color: Colors.red),
-                                        onPressed: () {
-                                          _confirmarExclusao(
-                                              context, agendamento);
-                                        },
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          controller.role == 'manager'
+                                              ? SizedBox(
+                                                  width: 10,
+                                                  height: 10,
+                                                  child: Checkbox(
+                                                    focusColor: MColors.teal,
+                                                    hoverColor: MColors.teal,
+                                                    value:
+                                                        agendamento.isRealizado,
+                                                    onChanged: (bool? value) {
+                                                      setState(() {
+                                                        agendamento
+                                                                .isRealizado =
+                                                            value ?? false;
+                                                      });
+                                                      controller
+                                                          .atualizarStatusRealizado(
+                                                              agendamento);
+                                                      controller
+                                                          .carregarAgendamentos();
+                                                    },
+                                                  ),
+                                                )
+                                              : Container(),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete,
+                                                color: Colors.red),
+                                            onPressed: () {
+                                              _confirmarExclusao(
+                                                  context, agendamento);
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),

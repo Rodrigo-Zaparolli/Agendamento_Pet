@@ -531,14 +531,18 @@ class _PetsScreenState extends WidgetStateful<PetsScreen, DashboardController> {
           value: initialValue,
           items: options
               .toSet() // Remove valores duplicados
-              .map((option) => DropdownMenuItem<String>(
-                    value: option,
+              .map(
+                (option) => DropdownMenuItem<String>(
+                  value: option,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 150),
                     child: Text(
                       option,
-                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
           onChanged: onChanged,
           validator: validator,
